@@ -1,69 +1,83 @@
 # CodeFlash Optimize-Me 
 
-## Table of Contents
-- [Introduction](#introduction)
-- [What is CodeFlash?](#what-is-codeflash)
-- [Installation](#installation)
-  - [CodeFlash](#codeflash)
-  - [This Repository](#this-repository)
-- [Using CodeFlash](#using-codeflash)
-- [Expected Workflow](#expected-workflow)
-- [Contributing](#contributing)
+This repository contains code that can be optimized with Codeflash. The idea is that you can easily get started with Codeflash by optimizing this repository.
 
-## Introduction
+Fork this repo, clone it on your machine, then run Codeflash to see how it analyzes your code, suggests improvements, and integrates with your workflow through pull requests.
 
-Welcome to the CodeFlash Optimize-Me Repository!
+## What is Codeflash?
 
-This repository contains code ready for optimization. Clone or fork it, then run CodeFlash to see how it analyzes your code, suggests improvements, and integrates with your workflow through pull requests.
+Codeflash is an automated AI based code performance optimizer that creates verified optimizations for your code. It improves performance, reduces resource usage, and enhances code efficiency. You can use it to optimize algorithms, speed up mathematical computations, optimize Pytorch, and make data handling more efficient with NumPy and Pandas.
 
-## What is CodeFlash?
+## Getting Started
 
-CodeFlash helps you find ways to optimize your code. It improves performance, reduces resource usage, and enhances code efficiency. You can use it to optimize algorithms, speed up mathematical computations, and make data handling more efficient with NumPy and Pandas.
+The below is expected to take about 5 minutes.
 
-## Installation
-
-### CodeFlash
+- Fork this repo on your GitHub account. You can do it by clicking "Fork" on the top of this repo. This is required so that Codeflash can open Pull Requests with the optimizations it found on your fork.
+- Clone the repo to your machine. Any machine works - laptops, PCs, virtual machines.
 
 ```bash
-pip install codeflash
+git clone https://github.com/<your_github_account>/optimize-me.git
+cd optimize-me
+```
+- Create a new Python virtual environment, and activate it.
+  
+With `venv` you can do
+```bash
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-### This Repository
-
+To use `conda` you can do
 ```bash
-git clone https://github.com/codeflash-ai/optimize-me.git
-cd optimize-me
+conda create -n optimize-me
+conda activate optimize-me
+```
+
+- Install Package dependencies
+```bash
 pip install -r requirements.txt
 ```
 
+## Set up Codeflash
+
+You can now follow the quick guided setup by running -
+```bash
+codeflash init
+```
+Since this project already has the codeflash settings pre-configured in pyproject.toml, it will only ask you to get a `CODEFLASH_API_KEY` by [signing up to Codeflash](https://app.codeflash.ai/login) and installing a GitHub App through [this link](https://github.com/apps/codeflash-ai/installations/select_target)
+
 ## Using CodeFlash
 
-Run CodeFlash on your Python scripts with a simple command:
+- Optimize all the Python code in this repo by running
 
 ```bash
 codeflash --all
 ```
+Codeflash will keep creating Pull Requests with optimizations for you as it keeps finding them.
 
-CodeFlash will find potential optimization opportunities. You can then improve your code and check the results by running CodeFlash again.
+- Optimize a single file
 
-## Expected Workflow
+```bash
+codeflash --file path/to/file
+```
 
-1. **Identify**: Use CodeFlash to spot optimization opportunities
-2. **Optimize**: Apply the suggested improvements
+- Optimize a single function
+
+```bash
+codeflash --file path/to/file --function function_name
+```
+
+🪄 And just like that you've started on the journey of never shipping slow code again!
+
+## Need Help?
+
+The best way to ask for help is to join our [Discord community](https://www.codeflash.ai/discord)
 
 ## Contributing
 
+Please don't open Pull Requests on this repo with the optimizations you found. We want to keep this project unoptimized, so that people can optimize it in the future as well.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing optimization examples and modules.
-
-## Installation
-
-Install dependencies with:
-
-```bash
-pip install -r requirements.txt
-```
-
-These packages help you perform numerical and data operations efficiently.
 
 ## Contributing Guidelines
 
