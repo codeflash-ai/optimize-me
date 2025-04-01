@@ -77,10 +77,6 @@ The best way to ask for help is to join our [Discord community](https://www.code
 
 Please don't open Pull Requests on this repo with the optimizations you found. We want to keep this project unoptimized, so that people can optimize it in the future as well.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing optimization examples and modules.
-
-## Contributing Guidelines
-
 Want to contribute? Here's how:
 
 1. Fork the repository
