@@ -2,7 +2,7 @@ name: unit-tests
 
 on:
   push:
-    branches: [main]
+    branches: [ requirements-tests ]
   pull_request:
   workflow_dispatch:
 
@@ -19,24 +19,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Instalación ultra-rápida con UV
       - name: Set up Python ${{ matrix.python-version }} and UV
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-          version: "0.5.30"
 
-      # Instalación de dependencias (alternativa optimizada)
       - name: Install dependencies with UV
         run: |
           uv pip install --upgrade pip
-          uv pip install ".[dev]"  # Equivalente a `poetry install --with dev` pero más rápido
+          uv pip install -r requirements.txt
 
-      # Tests y cobertura (sin cambios en la lógica)
       - name: Run unit tests
-        run: pytest tests/ --cov --cov-report=xml
-
-      # Subida condicional a Codecov (solo Python 3.12.1)
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        if: matrix.python-version == '3.12.1'
+        run: uv pip install pytest && uv python -m pytest tests/
