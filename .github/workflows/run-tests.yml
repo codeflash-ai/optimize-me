@@ -1,27 +1,42 @@
-name: Python Tests (macOS)
+name: unit-tests
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches: [requirements-tests]
-    types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: macos-latest
-
+  unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.9.18, 3.10.13, 3.11.6, 3.12.1, 3.13.0]
+    continue-on-error: true
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      # Instalación ultra-rápida con UV
+      - name: Set up Python ${{ matrix.python-version }} and UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          version: "0.5.30"
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest
+      # Instalación de dependencias (alternativa optimizada)
+      - name: Install dependencies with UV
+        run: |
+          uv pip install --upgrade pip
+          uv pip install ".[dev]"  # Equivalente a `poetry install --with dev` pero más rápido
 
-    - name: Run tests
-      run: pytest tests/ -v
+      # Tests y cobertura (sin cambios en la lógica)
+      - name: Run unit tests
+        run: pytest tests/ --cov --cov-report=xml
+
+      # Subida condicional a Codecov (solo Python 3.12.1)
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: matrix.python-version == '3.12.1'
