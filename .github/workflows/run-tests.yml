@@ -26,7 +26,6 @@ jobs:
 
       - name: Install dependencies with UV
         run: |
-          uv pip install --upgrade pip
           uv pip install -r requirements.txt
 
       - name: Run unit tests
