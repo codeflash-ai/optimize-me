@@ -30,4 +30,4 @@ jobs:
           uv pip install -r requirements.txt
 
       - name: Run unit tests
-        run: uv pip install pytest && uv python -m pytest tests/
+        run: uv python -m pytest tests/
