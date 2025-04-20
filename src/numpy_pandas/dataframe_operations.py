@@ -113,16 +113,11 @@ def fillna(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
 
 
 def drop_duplicates(df: pd.DataFrame, subset: List[str] = None) -> pd.DataFrame:
-    if subset is None:
-        subset = df.columns.tolist()
-    seen = set()
-    keep_indices = []
-    for i in range(len(df)):
-        values = tuple(df.iloc[i][col] for col in subset)
-        if values not in seen:
-            seen.add(values)
-            keep_indices.append(i)
-    return df.iloc[keep_indices].reset_index(drop=True)
+    """
+    Drops duplicate rows from the DataFrame based on the provided subset of columns.
+    """
+    # Use pandas built-in drop_duplicates, which is optimized for performance
+    return df.drop_duplicates(subset=subset).reset_index(drop=True)
 
 
 def sort_values(df: pd.DataFrame, by: str, ascending: bool = True) -> pd.DataFrame:
