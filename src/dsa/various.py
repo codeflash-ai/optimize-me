@@ -114,3 +114,8 @@ class PathFinder:
                     queue.append(new_path)
 
         return []  # No path found
+
+
+def sorter(arr):
+    arr.sort()
+    return arr
