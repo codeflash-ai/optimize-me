@@ -37,24 +37,39 @@ def dataframe_merge(
     result_data = []
     left_cols = list(left.columns)
     right_cols = [col for col in right.columns if col != right_on]
+    # Use numpy arrays for fast row and column access
+    left_values = left.values
+    right_values = right.values
+    left_on_idx = left.columns.get_loc(left_on)
+    right_on_idx = right.columns.get_loc(right_on)
+    # Build right_dict mapping join keys to row indices, but using values array for fast access
     right_dict = {}
-    for i in range(len(right)):
-        key = right.iloc[i][right_on]
+    # Store right row indexes for each key, as before, but no iloc
+    for i in range(right_values.shape[0]):
+        key = right_values[i, right_on_idx]
         if key not in right_dict:
             right_dict[key] = []
         right_dict[key].append(i)
-    for i in range(len(left)):
-        left_row = left.iloc[i]
-        key = left_row[left_on]
+    # Precompute column indices to avoid repeated get_loc()
+    left_col_indices = [left.columns.get_loc(col) for col in left_cols]
+    right_col_indices = [right.columns.get_loc(col) for col in right_cols]
+    # Outer join
+    for i in range(left_values.shape[0]):
+        key = left_values[i, left_on_idx]
         if key in right_dict:
+            left_row_values = left_values[i]
+            # Compose dict of left row vals only once
+            left_row_dict = {
+                col: left_row_values[idx]
+                for col, idx in zip(left_cols, left_col_indices)
+            }
             for right_idx in right_dict[key]:
-                right_row = right.iloc[right_idx]
-                new_row = {}
-                for col in left_cols:
-                    new_row[col] = left_row[col]
-                for col in right_cols:
-                    new_row[col] = right_row[col]
-                result_data.append(new_row)
+                right_row_values = right_values[right_idx]
+                # Add right row values except join column
+                row = left_row_dict.copy()
+                for col, idx in zip(right_cols, right_col_indices):
+                    row[col] = right_row_values[idx]
+                result_data.append(row)
     return pd.DataFrame(result_data)
 
 
@@ -66,14 +81,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
