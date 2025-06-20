@@ -19,11 +19,21 @@ def numerical_integration_rectangle(
 
 
 def binomial_coefficient_recursive(n: int, k: int) -> int:
+    # Use a cache to store previously computed results for faster lookups
+    if not hasattr(binomial_coefficient_recursive, "_cache"):
+        binomial_coefficient_recursive._cache = {}
+    cache = binomial_coefficient_recursive._cache
+    key = (n, k)
+    if key in cache:
+        return cache[key]
     if k == 0 or k == n:
-        return 1
-    return binomial_coefficient_recursive(
-        n - 1, k - 1
-    ) + binomial_coefficient_recursive(n - 1, k)
+        result = 1
+    else:
+        result = binomial_coefficient_recursive(
+            n - 1, k - 1
+        ) + binomial_coefficient_recursive(n - 1, k)
+    cache[key] = result
+    return result
 
 
 def naive_matrix_determinant(matrix: List[List[float]]) -> float:
