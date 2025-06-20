@@ -3,6 +3,7 @@ from typing import List, Tuple
 import math
 from typing import Callable
 import random
+import numpy as np
 
 
 def numerical_integration_rectangle(
@@ -11,11 +12,21 @@ def numerical_integration_rectangle(
     if a > b:
         a, b = b, a
     h = (b - a) / n
-    result = 0.0
-    for i in range(n):
-        x = a + i * h
-        result += f(x)
-    return result * h
+
+    # Fast path: try to use numpy vectorization if f supports arrays
+    try:
+        xs = a + h * np.arange(n)
+        # Try: see if f accepts ndarray and returns an ndarray
+        ys = f(xs)
+        # Succeeds if ys is a numpy array (or can be summed)
+        return float(np.sum(ys) * h)
+    except Exception:
+        # Fallback to original loop if f is not vectorized
+        result = 0.0
+        for i in range(n):
+            x = a + i * h
+            result += f(x)
+        return result * h
 
 
 def binomial_coefficient_recursive(n: int, k: int) -> int:
