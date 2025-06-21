@@ -30,14 +30,23 @@ def matrix_inverse(matrix: np.ndarray) -> np.ndarray:
         raise ValueError("Matrix must be square")
     n = matrix.shape[0]
     identity = np.eye(n)
-    augmented = np.hstack((matrix, identity))
+    augmented = np.hstack(
+        (matrix.astype(float, copy=False), identity)
+    )  # avoid unnecessary matrix copy
     for i in range(n):
         pivot = augmented[i, i]
-        augmented[i] = augmented[i] / pivot
-        for j in range(n):
-            if i != j:
-                factor = augmented[j, i]
-                augmented[j] = augmented[j] - factor * augmented[i]
+        augmented[i] /= pivot  # in-place row scaling
+
+        # Vectorized row elimination, update all other rows in a single operation
+        if i + 1 < n:
+            col = augmented[i + 1 :, i]
+            rows = augmented[i + 1 :]
+            # Subtract in block
+            rows -= col[:, np.newaxis] * augmented[i]
+        if i > 0:
+            col = augmented[:i, i]
+            rows = augmented[:i]
+            rows -= col[:, np.newaxis] * augmented[i]
     return augmented[:, n:]
 
 
