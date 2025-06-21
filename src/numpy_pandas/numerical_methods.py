@@ -12,9 +12,23 @@ def numerical_integration_rectangle(
         a, b = b, a
     h = (b - a) / n
     result = 0.0
-    for i in range(n):
-        x = a + i * h
+    x = a
+    # Loop unrolling by 4 to reduce overhead
+    unroll = 4
+    m = n // unroll * unroll  # Number of iterations that fit evenly into unroll
+    for i in range(0, m, unroll):
         result += f(x)
+        x1 = x + h
+        result += f(x1)
+        x2 = x1 + h
+        result += f(x2)
+        x3 = x2 + h
+        result += f(x3)
+        x = x3 + h
+    # Handle remainder
+    for i in range(m, n):
+        result += f(x)
+        x += h
     return result * h
 
 
