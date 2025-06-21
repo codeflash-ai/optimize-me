@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
@@ -204,38 +207,42 @@ def describe(series: pd.Series) -> dict[str, float]:
 
 
 def correlation(df: pd.DataFrame) -> dict[Tuple[str, str], float]:
+    # Identify numeric columns
     numeric_columns = [
         col for col in df.columns if np.issubdtype(df[col].dtype, np.number)
     ]
     n_cols = len(numeric_columns)
     result = {}
+    # Convert numeric columns to numpy arrays once
+    arrays = {col: df[col].to_numpy() for col in numeric_columns}
+    # Precompute NaN masks per numeric column
+    notna_masks = {col: ~np.isnan(arrays[col]) for col in numeric_columns}
+
     for i in range(n_cols):
         col_i = numeric_columns[i]
+        arr_i = arrays[col_i]
+        mask_i = notna_masks[col_i]
         for j in range(n_cols):
             col_j = numeric_columns[j]
-            values_i = []
-            values_j = []
-            for k in range(len(df)):
-                if not pd.isna(df.iloc[k][col_i]) and not pd.isna(df.iloc[k][col_j]):
-                    values_i.append(df.iloc[k][col_i])
-                    values_j.append(df.iloc[k][col_j])
-            n = len(values_i)
+            arr_j = arrays[col_j]
+            mask_j = notna_masks[col_j]
+            # Use a combined valid data mask
+            valid_mask = mask_i & mask_j
+            n = valid_mask.sum()
             if n == 0:
                 result[(col_i, col_j)] = np.nan
                 continue
-            mean_i = sum(values_i) / n
-            mean_j = sum(values_j) / n
-            var_i = sum((x - mean_i) ** 2 for x in values_i) / n
-            var_j = sum((x - mean_j) ** 2 for x in values_j) / n
-            std_i = var_i**0.5
-            std_j = var_j**0.5
+            values_i = arr_i[valid_mask]
+            values_j = arr_j[valid_mask]
+            # Use NumPy for statistics
+            mean_i = np.mean(values_i)
+            mean_j = np.mean(values_j)
+            std_i = np.std(values_i)
+            std_j = np.std(values_j)
             if std_i == 0 or std_j == 0:
                 result[(col_i, col_j)] = np.nan
                 continue
-            cov = (
-                sum((values_i[k] - mean_i) * (values_j[k] - mean_j) for k in range(n))
-                / n
-            )
+            cov = np.mean((values_i - mean_i) * (values_j - mean_j))
             corr = cov / (std_i * std_j)
             result[(col_i, col_j)] = corr
     return result
