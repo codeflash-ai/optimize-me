@@ -61,29 +61,30 @@ def find_cycle_vertices(edges):
 
 # derived from https://github.com/langflow-ai/langflow/pull/5263
 def sort_chat_inputs_first(self, vertices_layers: list[list[str]]) -> list[list[str]]:
-    # First check if any chat inputs have dependencies
-    for layer in vertices_layers:
-        for vertex_id in layer:
-            if "ChatInput" in vertex_id and self.get_predecessors(
-                self.get_vertex(vertex_id)
-            ):
-                return vertices_layers
-
-    # If no chat inputs have dependencies, move them to first layer
+    # Collect chat input ids and create new layers with chat inputs removed
     chat_inputs_first = []
+    new_vertices_layers = []
+    # Flag for early exit
     for layer in vertices_layers:
-        layer_chat_inputs_first = [
-            vertex_id for vertex_id in layer if "ChatInput" in vertex_id
-        ]
-        chat_inputs_first.extend(layer_chat_inputs_first)
-        for vertex_id in layer_chat_inputs_first:
-            # Remove the ChatInput from the layer
-            layer.remove(vertex_id)
-
+        chat_input_ids = []
+        rest_ids = []
+        for vertex_id in layer:
+            if "ChatInput" in vertex_id:
+                # Defer the get_vertex/get_predecessors call until necessary
+                vertex = self.get_vertex(vertex_id)
+                if self.get_predecessors(vertex):
+                    # At least one chat input has dependencies; return original
+                    return vertices_layers
+                chat_input_ids.append(vertex_id)
+            else:
+                rest_ids.append(vertex_id)
+        chat_inputs_first.extend(chat_input_ids)
+        new_vertices_layers.append(rest_ids)
+    # Remove empty layers
+    filtered_layers = [layer for layer in new_vertices_layers if layer]
     if not chat_inputs_first:
         return vertices_layers
-
-    return [chat_inputs_first, *vertices_layers]
+    return [chat_inputs_first] + filtered_layers
 
 
 # Function to find the node with highest degree (most connections)
