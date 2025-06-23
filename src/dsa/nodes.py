@@ -10,16 +10,10 @@ def find_last_node(nodes, edges):
 
 # Function to find all leaf nodes (nodes with no outgoing edges)
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
-    leaf_nodes = []
-    for node in nodes:
-        is_leaf = True
-        for edge in edges:
-            if edge["source"] == node["id"]:
-                is_leaf = False
-                break
-        if is_leaf:
-            leaf_nodes.append(node)
-    return leaf_nodes
+    # Build a set of all node ids that are sources in the edge list
+    source_ids = {edge["source"] for edge in edges}
+    # Return all nodes whose id is not in the source_ids set
+    return [node for node in nodes if node["id"] not in source_ids]
 
 
 JsonRef = NewType("JsonRef", str)
