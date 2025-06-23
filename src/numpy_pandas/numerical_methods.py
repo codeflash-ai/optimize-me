@@ -1,12 +1,19 @@
+from __future__ import annotations
 from typing import List, Tuple
 
 import math
-from typing import Callable
+from typing import Callable, Union, TYPE_CHECKING
 import random
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def numerical_integration_rectangle(
-    f: Callable[[float], float], a: float, b: float, n: int
+    f: Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]],
+    a: Union[float, np.ndarray],
+    b: Union[float, np.ndarray],
+    n: int,
 ) -> float:
     if a > b:
         a, b = b, a
