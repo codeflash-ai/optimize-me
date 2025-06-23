@@ -90,18 +90,21 @@ def sort_chat_inputs_first(self, vertices_layers: list[list[str]]) -> list[list[
 def find_node_with_highest_degree(
     nodes: list[str], connections: dict[str, list[str]]
 ) -> str:
+    # Precompute incoming degree for each node.
+    incoming_degree = {}
+    for targets in connections.values():
+        for target in targets:
+            incoming_degree[target] = incoming_degree.get(target, 0) + 1
+
     max_degree = -1
     max_degree_node = None
 
     for node in nodes:
-        degree = 0
         # Count outgoing connections
-        degree += len(connections.get(node, []))
-
+        out_deg = len(connections.get(node, []))
         # Count incoming connections
-        for src, targets in connections.items():
-            if node in targets:
-                degree += 1
+        in_deg = incoming_degree.get(node, 0)
+        degree = out_deg + in_deg
 
         if degree > max_degree:
             max_degree = degree
