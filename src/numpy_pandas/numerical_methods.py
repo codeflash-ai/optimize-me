@@ -4,6 +4,7 @@ from typing import List, Tuple
 import math
 from typing import Callable, Union, TYPE_CHECKING
 import random
+import json
 
 if TYPE_CHECKING:
     import numpy as np
@@ -165,3 +166,8 @@ def bisection_method(
         else:
             a = c
     return (a + b) / 2
+
+
+def load_json_from_string(json_string: str) -> List[dict]:
+    obj = json.loads(json_string)
+    return [obj] * 1000
