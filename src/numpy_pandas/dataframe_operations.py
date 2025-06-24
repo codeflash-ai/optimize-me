@@ -61,38 +61,44 @@ def dataframe_merge(
 def pivot_table(
     df: pd.DataFrame, index: str, columns: str, values: str, aggfunc: str = "mean"
 ) -> dict[Any, dict[Any, float]]:
-    result = {}
+    # Select aggregation function
     if aggfunc == "mean":
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
+
+    # Pre-extract columns as numpy arrays (or pandas Series), much faster than row-by-row iloc
+    index_col = df[index].values
+    column_col = df[columns].values
+    value_col = df[values].values
+
     grouped_data = {}
-    for i in range(len(df)):
-        row = df.iloc[i]
-        index_val = row[index]
-        column_val = row[columns]
-        value = row[values]
-        if index_val not in grouped_data:
-            grouped_data[index_val] = {}
-        if column_val not in grouped_data[index_val]:
-            grouped_data[index_val][column_val] = []
-        grouped_data[index_val][column_val].append(value)
-    for index_val in grouped_data:
-        result[index_val] = {}
-        for column_val in grouped_data[index_val]:
-            result[index_val][column_val] = agg_func(
-                grouped_data[index_val][column_val]
-            )
+
+    # Use direct iteration on arrays, much faster than df.iloc[index]
+    for idx_val, col_val, val in zip(index_col, column_col, value_col):
+        group_dict = grouped_data.setdefault(idx_val, {})
+        group_list = group_dict.setdefault(col_val, [])
+        group_list.append(val)
+
+    # Aggregate
+    result = {}
+    for idx_val, col_dict in grouped_data.items():
+        result[idx_val] = {}
+        for col_val, vals in col_dict.items():
+            result[idx_val][col_val] = agg_func(vals)
     return result
 
 
