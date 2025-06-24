@@ -124,16 +124,11 @@ def gradient_descent(
     m, n = X.shape
     weights = np.zeros(n)
     for _ in range(iterations):
-        predictions = np.zeros(m)
-        for i in range(m):
-            for j in range(n):
-                predictions[i] += X[i, j] * weights[j]
+        # Vectorized predictions: X.dot(weights)
+        predictions = X.dot(weights)
         errors = predictions - y
-        gradient = np.zeros(n)
-        for j in range(n):
-            for i in range(m):
-                gradient[j] += errors[i] * X[i, j]
-            gradient[j] /= m
-        for j in range(n):
-            weights[j] -= learning_rate * gradient[j]
+        # Vectorized gradient calculation
+        gradient = X.T.dot(errors) / m
+        # Vectorized weight update
+        weights -= learning_rate * gradient
     return weights
