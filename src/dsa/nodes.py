@@ -50,11 +50,17 @@ def find_cycle_vertices(edges):
     # Create a directed graph from the edges
     graph = nx.DiGraph(edges)
 
-    # Find all simple cycles in the graph
-    cycles = list(nx.simple_cycles(graph))
+    # Find all strongly connected components with more than one node
+    sccs = [scc for scc in nx.strongly_connected_components(graph) if len(scc) > 1]
+    # All nodes in these SCCs are part of at least one cycle
+    cycle_vertices = set()
+    for scc in sccs:
+        cycle_vertices.update(scc)
 
-    # Flatten the list of cycles and remove duplicates
-    cycle_vertices = {vertex for cycle in cycles for vertex in cycle}
+    # Add any vertices with a self-loop (might be size 1 SCCs missed above)
+    for node in graph.nodes:
+        if graph.has_edge(node, node):
+            cycle_vertices.add(node)
 
     return sorted(cycle_vertices)
 
