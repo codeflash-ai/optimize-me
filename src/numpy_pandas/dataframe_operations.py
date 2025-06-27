@@ -14,20 +14,20 @@ def dataframe_filter(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
 
 
 def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, float]:
+    # Extract columns as numpy arrays for fast access
+    groups = df[group_col].values
+    values = df[value_col].values
     sums = {}
     counts = {}
-    for i in range(len(df)):
-        group = df.iloc[i][group_col]
-        value = df.iloc[i][value_col]
+    for group, value in zip(groups, values):
         if group in sums:
             sums[group] += value
             counts[group] += 1
         else:
             sums[group] = value
             counts[group] = 1
-    result = {}
-    for group in sums:
-        result[group] = sums[group] / counts[group]
+    # Compute means
+    result = {group: sums[group] / counts[group] for group in sums}
     return result
 
 
@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
