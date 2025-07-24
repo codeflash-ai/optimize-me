@@ -4,12 +4,10 @@ def gcd_recursive(a: int, b: int) -> int:
         return a
     return gcd_recursive(b, a % b)
 
+
 def lcm(a: int, b: int) -> int:
-    def gcd(x, y):
-        while y:
-            x, y = y, x % y
-        return x
     return abs(a * b) // gcd(a, b) if a and b else 0
+
 
 def factorial(n: int) -> int:
     if n < 0:
@@ -17,6 +15,7 @@ def factorial(n: int) -> int:
     if n == 0 or n == 1:
         return 1
     return n * factorial(n - 1)
+
 
 def fibonacci(n: int) -> int:
     if n < 0:
@@ -27,10 +26,17 @@ def fibonacci(n: int) -> int:
         return 1
     return fibonacci(n - 1) + fibonacci(n - 2)
 
+
 def is_prime(n: int) -> bool:
     if n <= 1:
         return False
-    for i in range(2, int(n ** 0.5) + 1):
+    for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
             return False
     return True
+
+
+def gcd(x, y):
+    while y:
+        x, y = y, x % y
+    return x
