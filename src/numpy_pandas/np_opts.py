@@ -163,13 +163,18 @@ def newton_raphson_sqrt(x: float, epsilon: float = 1e-10, max_iter: int = 100) -
 def lagrange_interpolation(points: List[Tuple[float, float]], x: float) -> float:
     """Interpolate a function value using Lagrange polynomials."""
     result = 0.0
+    xs = [pt[0] for pt in points]
+    ys = [pt[1] for pt in points]
     n = len(points)
 
     for i in range(n):
-        term = points[i][1]
+        xi, yi = xs[i], ys[i]
+        term = yi
         for j in range(n):
             if i != j:
-                term *= (x - points[j][0]) / (points[i][0] - points[j][0])
+                numerator = x - xs[j]
+                denominator = xi - xs[j]
+                term *= numerator / denominator
         result += term
 
     return result
