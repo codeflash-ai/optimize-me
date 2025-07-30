@@ -16,6 +16,7 @@ def binomial_coefficient_recursive(n: int, k: int) -> int:
 
 def naive_matrix_determinant(matrix: List[List[float]]) -> float:
     """Calculate determinant using cofactor expansion."""
+
     n = len(matrix)
 
     if n == 1:
@@ -25,17 +26,12 @@ def naive_matrix_determinant(matrix: List[List[float]]) -> float:
         return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
 
     determinant = 0
+    # Only create submatrices with fast list comprehension
     for j in range(n):
-        # Create submatrix by removing first row and column j
-        submatrix = []
-        for i in range(1, n):
-            row = []
-            for k in range(n):
-                if k != j:
-                    row.append(matrix[i][k])
-            submatrix.append(row)
-
-        sign = (-1) ** j
+        # Submatrix: remove row 0, and column j
+        submatrix = [row[:j] + row[j + 1 :] for row in matrix[1:]]
+        # Alternate sign using bit operation for speed
+        sign = -1 if (j & 1) else 1
         determinant += sign * matrix[0][j] * naive_matrix_determinant(submatrix)
 
     return determinant
