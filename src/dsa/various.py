@@ -44,7 +44,8 @@ def string_concat(n):
 
 
 def matrix_sum(matrix: list[list[int]]) -> list[int]:
-    return [sum(matrix[i]) for i in range(len(matrix)) if sum(matrix[i]) > 0]
+    # Compute the row sum once, and include if > 0
+    return [row_sum for row in matrix if (row_sum := sum(row)) > 0]
 
 
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
