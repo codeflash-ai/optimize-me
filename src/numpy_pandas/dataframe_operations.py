@@ -62,31 +62,39 @@ def pivot_table(
     df: pd.DataFrame, index: str, columns: str, values: str, aggfunc: str = "mean"
 ) -> dict[Any, dict[Any, float]]:
     result = {}
+    # Define aggregation function
     if aggfunc == "mean":
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
+
+    # Vectorized extraction of columns for faster row iteration
+    index_arr = df[index].values
+    columns_arr = df[columns].values
+    values_arr = df[values].values
+
+    # Populate grouped_data directly using arrays, avoiding DataFrame row objects
     grouped_data = {}
-    for i in range(len(df)):
-        row = df.iloc[i]
-        index_val = row[index]
-        column_val = row[columns]
-        value = row[values]
+    for index_val, column_val, value in zip(index_arr, columns_arr, values_arr):
         if index_val not in grouped_data:
             grouped_data[index_val] = {}
         if column_val not in grouped_data[index_val]:
             grouped_data[index_val][column_val] = []
         grouped_data[index_val][column_val].append(value)
+
     for index_val in grouped_data:
         result[index_val] = {}
         for column_val in grouped_data[index_val]:
