@@ -183,7 +183,9 @@ def bisection_method(
     max_iter: int = 100,
 ) -> float:
     """Find a root of function f using bisection method."""
-    if f(a) * f(b) > 0:
+    fa = f(a)
+    fb = f(b)
+    if fa * fb > 0:
         raise ValueError("Function must have opposite signs at endpoints")
 
     for _ in range(max_iter):
@@ -193,9 +195,9 @@ def bisection_method(
         if abs(fc) < epsilon:
             return c
 
-        if f(a) * fc < 0:
-            b = c
+        if fa * fc < 0:
+            b, fb = c, fc
         else:
-            a = c
+            a, fa = c, fc
 
     return (a + b) / 2
