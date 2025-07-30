@@ -84,10 +84,11 @@ def sieve_of_eratosthenes(n: int) -> List[int]:
         return []
     is_prime = [True] * (n + 1)
     is_prime[0] = is_prime[1] = False
-    for i in range(2, int(math.sqrt(n)) + 1):
+    limit = int(n**0.5) + 1
+    for i in range(2, limit):
         if is_prime[i]:
-            for j in range(i * i, n + 1, i):
-                is_prime[j] = False
+            # Use slice assignment for faster marking of non-primes
+            is_prime[i * i : n + 1 : i] = [False] * ((n - i * i) // i + 1)
     return [i for i in range(2, n + 1) if is_prime[i]]
 
 
