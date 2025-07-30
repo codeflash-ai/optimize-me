@@ -94,16 +94,28 @@ def sieve_of_eratosthenes(n: int) -> List[int]:
     """Find all primes up to n using sieve of Eratosthenes."""
     if n <= 1:
         return []
+    if n == 2:
+        return [2]
 
-    is_prime = [True] * (n + 1)
-    is_prime[0] = is_prime[1] = False
+    # Only consider odd numbers: is_prime[i] represents (2*i+3)
+    size = (n - 1) // 2
+    is_prime = [True] * size
 
-    for i in range(2, int(math.sqrt(n)) + 1):
+    max_i = int(n**0.5)
+    for i in range((max_i - 1) // 2 + 1):
         if is_prime[i]:
-            for j in range(i * i, n + 1, i):
+            p = 2 * i + 3
+            # Start marking at p*p, index = ((p*p)-3)//2
+            start = ((p * p) - 3) // 2
+            for j in range(start, size, p):
                 is_prime[j] = False
 
-    return [i for i in range(2, n + 1) if is_prime[i]]
+    # Collect primes: 2, plus all odd numbers with is_prime True
+    primes = [2]
+    for i, prime in enumerate(is_prime):
+        if prime:
+            primes.append(2 * i + 3)
+    return primes
 
 
 def linear_equation_solver(A: List[List[float]], b: List[float]) -> List[float]:
