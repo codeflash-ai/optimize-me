@@ -87,18 +87,10 @@ def gaussian_blur(
 
 
 def histogram_equalization(image: np.ndarray) -> np.ndarray:
-    height, width = image.shape
-    total_pixels = height * width
-    histogram = np.zeros(256, dtype=int)
-    for y in range(height):
-        for x in range(width):
-            histogram[image[y, x]] += 1
-    cdf = np.zeros(256, dtype=float)
-    cdf[0] = histogram[0] / total_pixels
-    for i in range(1, 256):
-        cdf[i] = cdf[i - 1] + histogram[i] / total_pixels
-    equalized = np.zeros_like(image)
-    for y in range(height):
-        for x in range(width):
-            equalized[y, x] = np.round(cdf[image[y, x]] * 255)
+    # Compute histogram using np.bincount for efficiency
+    histogram = np.bincount(image.ravel(), minlength=256)
+    # Compute cumulative distribution function (cdf)
+    cdf = histogram.cumsum() / image.size
+    # Map image pixels using the cdf, vectorized
+    equalized = np.round(cdf[image] * 255).astype(image.dtype)
     return equalized
