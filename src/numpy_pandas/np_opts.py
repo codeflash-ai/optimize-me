@@ -78,15 +78,11 @@ def slow_matrix_inverse(matrix: List[List[float]]) -> List[List[float]]:
 
 def monte_carlo_pi(num_samples: int) -> float:
     """Estimate π using Monte Carlo method."""
-    inside_circle = 0
-
-    for _ in range(num_samples):
-        x = random.uniform(-1, 1)
-        y = random.uniform(-1, 1)
-
-        if x**2 + y**2 <= 1:
-            inside_circle += 1
-
+    # Batch sample coordinates to list or tuple for reduced lookup overhead
+    coords = (
+        (random.uniform(-1, 1), random.uniform(-1, 1)) for _ in range(num_samples)
+    )
+    inside_circle = sum(x * x + y * y <= 1 for x, y in coords)
     return 4 * inside_circle / num_samples
 
 
