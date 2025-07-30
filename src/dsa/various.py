@@ -70,10 +70,20 @@ def regex_match(strings: list[str], pattern: str) -> list[str]:
 
 
 def is_palindrome(text: str) -> bool:
-    cleaned_text = "".join(c.lower() for c in text if c.isalnum())
-    for i in range(len(cleaned_text) // 2):
-        if cleaned_text[i] != cleaned_text[len(cleaned_text) - 1 - i]:
+    left = 0
+    right = len(text) - 1
+    while left < right:
+        # Move left pointer to next alphanumeric character
+        while left < right and not text[left].isalnum():
+            left += 1
+        # Move right pointer to previous alphanumeric character
+        while left < right and not text[right].isalnum():
+            right -= 1
+        # Compare characters in lowercase
+        if text[left].lower() != text[right].lower():
             return False
+        left += 1
+        right -= 1
     return True
 
 
