@@ -34,26 +34,38 @@ def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, 
 def dataframe_merge(
     left: pd.DataFrame, right: pd.DataFrame, left_on: str, right_on: str
 ) -> pd.DataFrame:
-    result_data = []
+    # Use numpy for fast access to data and zip view for columns
     left_cols = list(left.columns)
     right_cols = [col for col in right.columns if col != right_on]
+
+    left_on_idx = left.columns.get_loc(left_on)
+    right_on_idx = right.columns.get_loc(right_on)
+
+    left_values = left.values
+    right_values = right.values
+
+    # Build right_dict using numpy array for fast data lookups
     right_dict = {}
-    for i in range(len(right)):
-        key = right.iloc[i][right_on]
+    for i in range(len(right_values)):
+        key = right_values[i, right_on_idx]
         if key not in right_dict:
             right_dict[key] = []
         right_dict[key].append(i)
-    for i in range(len(left)):
-        left_row = left.iloc[i]
-        key = left_row[left_on]
+
+    result_data = []
+    # Precompute col->index for faster access
+    left_col_indices = {col: idx for idx, col in enumerate(left_cols)}
+    right_col_indices = {col: idx for idx, col in enumerate(right.columns)}
+    for i in range(len(left_values)):
+        key = left_values[i, left_on_idx]
         if key in right_dict:
             for right_idx in right_dict[key]:
-                right_row = right.iloc[right_idx]
                 new_row = {}
+                # Use numpy fast value access
                 for col in left_cols:
-                    new_row[col] = left_row[col]
+                    new_row[col] = left_values[i, left_col_indices[col]]
                 for col in right_cols:
-                    new_row[col] = right_row[col]
+                    new_row[col] = right_values[right_idx, right_col_indices[col]]
                 result_data.append(new_row)
     return pd.DataFrame(result_data)
 
@@ -66,14 +78,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
