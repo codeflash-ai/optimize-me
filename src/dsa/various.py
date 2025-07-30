@@ -1,4 +1,5 @@
 import re
+from collections import deque
 
 
 class Graph:
@@ -96,21 +97,25 @@ class PathFinder:
         if start not in self.graph or end not in self.graph:
             return []
 
-        queue = [[start]]
+        queue = deque([start])
         visited = set([start])
+        parent = {start: None}
 
         while queue:
-            path = queue.pop(0)
-            node = path[-1]
+            node = queue.popleft()
 
             if node == end:
-                return path
+                # Reconstruct path backwards
+                path = []
+                while node is not None:
+                    path.append(node)
+                    node = parent[node]
+                return path[::-1]
 
             for neighbor in self.graph.get(node, []):
                 if neighbor not in visited:
                     visited.add(neighbor)
-                    new_path = list(path)
-                    new_path.append(neighbor)
-                    queue.append(new_path)
+                    parent[neighbor] = node
+                    queue.append(neighbor)
 
         return []  # No path found
