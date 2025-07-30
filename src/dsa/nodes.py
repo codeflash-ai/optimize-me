@@ -93,15 +93,18 @@ def find_node_with_highest_degree(
     max_degree = -1
     max_degree_node = None
 
-    for node in nodes:
-        degree = 0
-        # Count outgoing connections
-        degree += len(connections.get(node, []))
+    # Precompute in-degree for each node
+    in_degree = {}
+    for targets in connections.values():
+        for tgt in targets:
+            in_degree[tgt] = in_degree.get(tgt, 0) + 1
 
-        # Count incoming connections
-        for src, targets in connections.items():
-            if node in targets:
-                degree += 1
+    for node in nodes:
+        # Outgoing degree (connections from this node)
+        out_deg = len(connections.get(node, []))
+        # Incoming degree (connections to this node)
+        in_deg = in_degree.get(node, 0)
+        degree = out_deg + in_deg
 
         if degree > max_degree:
             max_degree = degree
