@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
@@ -97,11 +100,8 @@ def pivot_table(
 
 
 def apply_function(df: pd.DataFrame, column: str, func: Callable) -> List[Any]:
-    result = []
-    for i in range(len(df)):
-        value = df.iloc[i][column]
-        result.append(func(value))
-    return result
+    # Use vectorized map for better performance
+    return list(df[column].map(func))
 
 
 def fillna(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
