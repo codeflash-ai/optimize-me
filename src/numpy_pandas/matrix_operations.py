@@ -60,16 +60,14 @@ def matrix_decomposition_LU(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     L = np.zeros((n, n))
     U = np.zeros((n, n))
     for i in range(n):
+        # Compute the U[i, k] entries using vectorized dot product
+        Li = L[i, :i]
         for k in range(i, n):
-            sum_val = 0
-            for j in range(i):
-                sum_val += L[i, j] * U[j, k]
-            U[i, k] = A[i, k] - sum_val
+            U[i, k] = A[i, k] - np.dot(Li, U[:i, k])
         L[i, i] = 1
+        Ui = U[:i, i]
         for k in range(i + 1, n):
-            sum_val = 0
-            for j in range(i):
-                sum_val += L[k, j] * U[j, i]
+            sum_val = np.dot(L[k, :i], Ui)
             if U[i, i] == 0:
                 raise ValueError("Cannot perform LU decomposition")
             L[k, i] = (A[k, i] - sum_val) / U[i, i]
