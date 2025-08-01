@@ -1,12 +1,6 @@
-"""
-Inefficient async concurrency patterns.
-These examples show common anti-patterns that prevent proper concurrent execution.
-"""
-
 import asyncio
 import time
 import random
-from concurrent.futures import ThreadPoolExecutor
 
 
 async def fake_api_call(delay, data):
