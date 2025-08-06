@@ -15,7 +15,7 @@ async def cpu_bound_task(n):
     return result
 
 
-async def sequential_api_calls(urls):
+async def some_api_call(urls):
     results = []
     for i, url in enumerate(urls):
         result = await fake_api_call(random.uniform(0.5, 2.0), url)
