@@ -143,7 +143,7 @@ if __name__ == "__main__":
         
         # Example 3: Poor rate limiting
         start_time = time.time()
-        results = await scrape_with_inefficient_rate_limiting(test_urls[:3], 0.5)
+        results = await scrape_urls_sequentially(test_urls[:3], 0.5)
         print(f"Poor rate limiting took: {time.time() - start_time:.2f}s")
     
     asyncio.run(main())
