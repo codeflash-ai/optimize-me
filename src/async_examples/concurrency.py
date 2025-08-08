@@ -45,19 +45,3 @@ async def manga():
         results.append(f"CPU result: {cpu_result}")
     
     return results
-
-
-if __name__ == "__main__":
-    async def main():
-        print("Running inefficient concurrency examples...")
-        
-        urls = [f"https://api.example.com/data/{i}" for i in range(5)]
-        start_time = time.time()
-        results = await sequential_api_calls(urls)
-        print(f"Sequential calls took: {time.time() - start_time:.2f}s")
-        
-        start_time = time.time()
-        results = await inefficient_task_creation()
-        print(f"Inefficient tasks took: {time.time() - start_time:.2f}s")
-        
-    asyncio.run(main())
