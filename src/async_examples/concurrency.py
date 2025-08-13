@@ -23,7 +23,7 @@ async def some_api_call(urls):
     return results
 
 
-async def inefficient_task_creation():
+async def tasker():
     results = []
     for i in range(10):
         task = asyncio.create_task(fake_api_call(0.5, f"data_{i}"))
@@ -41,7 +41,6 @@ async def manga():
         results.append(async_result)
 
         time.sleep(0.5)
-        cpu_result = sum(range(100000))
-        results.append(f"CPU result: {cpu_result}")
-
+        summer = sum(range(100000))
+        results.append(f"Sync task {i} completed with sum: {summer}")
     return results
