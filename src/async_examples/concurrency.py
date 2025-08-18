@@ -4,7 +4,6 @@ import random
 
 
 async def fake_api_call(delay, data):
-    await asyncio.sleep(delay)
     return f"Processed: {data}"
 
 
@@ -16,10 +15,9 @@ async def cpu_bound_task(n):
 
 
 async def some_api_call(urls):
-    results = []
-    for url in urls:
-        res = await fake_api_call(1, url)
-        results.append(res)
+    # Launch all calls together; much faster
+    tasks = [fake_api_call(1, url) for url in urls]
+    results = await asyncio.gather(*tasks)
     return results
 
 
