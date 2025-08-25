@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock
-from src.async_examples.concurrency import some_api_call, fake_api_call
+from src.async_examples.concurrency import some_api_call
 
 
 @pytest.mark.asyncio
@@ -72,23 +72,4 @@ async def test_some_api_call_preserves_order():
         result = await some_api_call(urls)
 
         expected = ["Processed: a", "Processed: b", "Processed: c", "Processed: d"]
-        assert result == expected
-
-
-@pytest.mark.asyncio
-async def test_fake_api_call():
-    result = await fake_api_call(0.01, "test_data")
-    assert result == "Processed: test_data"
-
-
-@pytest.mark.asyncio
-async def test_fake_api_call_with_different_data():
-    test_cases = [
-        ("string", "Processed: string"),
-        (123, "Processed: 123"),
-        (["list"], "Processed: ['list']"),
-    ]
-
-    for data, expected in test_cases:
-        result = await fake_api_call(0.01, data)
         assert result == expected

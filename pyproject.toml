@@ -4,10 +4,14 @@ version = "0.1.0"
 description = "a sample repo for unoptimized code"
 requires-python = ">=3.9"
 dependencies = [
+    "aiohttp>=3.12.15",
     "black>=25.1.0",
     "codeflash",
+    "filelock>=3.19.1",
+    "network>=0.1",
     "networkx>=3.2.1",
     "pytest-asyncio>=1.1.0",
+    "ruff>=0.12.10",
 ]
 
 [tool.codeflash]
