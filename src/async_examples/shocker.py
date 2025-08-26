@@ -1,5 +1,8 @@
 from time import sleep
+from asyncio import sleep as async_sleep, sleep
+import asyncio
+
 
 async def tasked():
-    sleep(0.002)
+    await asyncio.sleep(0.002)
     return "Tasked"
