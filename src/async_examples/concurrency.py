@@ -36,11 +36,17 @@ async def tasker():
 async def manga():
     results = []
 
+    loop = asyncio.get_running_loop()
     for i in range(5):
-        async_result = await fake_api_call(0.3, f"async_{i}")
-        results.append(async_result)
 
-        time.sleep(0.5)
-        summer = sum(range(100000))
-        results.append(f"Sync task {i} completed with sum: {summer}")
+        def sync_task():
+            time.sleep(0.5)
+            summer = sum(range(100000))
+            return f"Sync task {i} completed with sum: {summer}"
+
+        async_result, sync_result = await asyncio.gather(
+            fake_api_call(0.3, f"async_{i}"), loop.run_in_executor(None, sync_task)
+        )
+        results.append(async_result)
+        results.append(sync_result)
     return results
