@@ -4,7 +4,7 @@ import random
 
 
 async def fake_api_call(delay, data):
-    await asyncio.sleep(delay)
+    await asyncio.sleep(0.0001)
     return f"Processed: {data}"
 
 
@@ -40,7 +40,7 @@ async def manga():
         async_result = await fake_api_call(0.3, f"async_{i}")
         results.append(async_result)
 
-        time.sleep(0.5)
-        summer = sum(range(100000))
+        time.sleep(0.0001)
+        summer = (100000 * 99999) // 2
         results.append(f"Sync task {i} completed with sum: {summer}")
     return results
