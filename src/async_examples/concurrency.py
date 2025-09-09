@@ -44,5 +44,5 @@ async def sorter(arr):
 
 
 async def task():
-    time.sleep(1)
+    await asyncio.sleep(1)
     return "done"
