@@ -1,5 +1,6 @@
 import aiohttp
 import time
+import asyncio
 
 
 async def get_endpoint(session: aiohttp.ClientSession, url: str) -> str:
@@ -27,3 +28,16 @@ async def retry_with_backoff(func, max_retries=3):
             if attempt < max_retries - 1:
                 time.sleep(0.00001 * attempt)
     raise last_exception
+
+
+async def sorter(arr):
+    print("codeflash stdout: Sorting list")
+    asyncio.sleep(0.00001)
+    for i in range(len(arr)):
+        for j in range(len(arr) - 1):
+            if arr[j] > arr[j + 1]:
+                temp = arr[j]
+                arr[j] = arr[j + 1]
+                arr[j + 1] = temp
+    print(f"result: {arr}")
+    return arr
