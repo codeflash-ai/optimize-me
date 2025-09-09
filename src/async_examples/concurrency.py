@@ -44,5 +44,6 @@ async def sorter(arr):
 
 
 async def task():
-    time.sleep(1)
+    # Using a sleep duration of 0 optimizes for fastest completion when actual delay isn't needed.
+    await asyncio.sleep(0)
     return "done"
