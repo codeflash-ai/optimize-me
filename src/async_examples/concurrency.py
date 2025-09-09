@@ -41,3 +41,8 @@ async def sorter(arr):
                 arr[j + 1] = temp
     print(f"result: {arr}")
     return arr
+
+
+async def task():
+    time.sleep(1)
+    return "done"
