@@ -16,14 +16,44 @@ def FFT(x: np.ndarray) -> np.ndarray:
     n = len(x)
     if n == 1:
         return x
-    even = FFT(x[0::2])
-    odd = FFT(x[1::2])
-    factor = np.exp(-2j * np.pi * np.arange(n) / n)
-    result = np.zeros(n, dtype=complex)
-    half_n = n // 2
-    for k in range(half_n):
-        result[k] = even[k] + factor[k] * odd[k]
-        result[k + half_n] = even[k] - factor[k] * odd[k]
+
+    levels = n.bit_length() - 1
+    if 2**levels != n:
+        even = FFT(x[0::2])
+        odd = FFT(x[1::2])
+        factor = np.exp(-2j * np.pi * np.arange(n) / n)
+        result = np.zeros(n, dtype=complex)
+        half_n = n // 2
+        for k in range(half_n):
+            result[k] = even[k] + factor[k] * odd[k]
+            result[k + half_n] = even[k] - factor[k] * odd[k]
+        return result
+
+    factor = np.exp(-2j * np.pi * np.arange(n // 2) / n)
+
+    rev = np.arange(n)
+    rev = ((rev & 0x55555555) << 1) | ((rev & 0xAAAAAAAA) >> 1)
+    rev = ((rev & 0x33333333) << 2) | ((rev & 0xCCCCCCCC) >> 2)
+    rev = ((rev & 0x0F0F0F0F) << 4) | ((rev & 0xF0F0F0F0) >> 4)
+    rev = ((rev & 0x00FF00FF) << 8) | ((rev & 0xFF00FF00) >> 8)
+    rev = ((rev & 0x0000FFFF) << 16) | ((rev & 0xFFFF0000) >> 16)
+    rev >>= 32 - levels
+    result = np.empty(n, dtype=complex)
+    result[:] = x[rev]
+
+    size = 2
+    while size <= n:
+        half_n = size // 2
+        tablestep = n // size
+        for i in range(0, n, size):
+            k = 0
+            for j in range(i, i + half_n):
+                t = factor[k] * result[j + half_n]
+                result[j + half_n] = result[j] - t
+                result[j] = result[j] + t
+                k += tablestep
+        size <<= 1
+
     return result
 
 
