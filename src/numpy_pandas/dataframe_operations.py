@@ -6,11 +6,7 @@ from typing import Callable, Any
 
 
 def dataframe_filter(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
-    indices = []
-    for i in range(len(df)):
-        if df.iloc[i][column] == value:
-            indices.append(i)
-    return df.iloc[indices].reset_index(drop=True)
+    return df[df[column] == value].reset_index(drop=True)
 
 
 def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, float]:
@@ -66,14 +62,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
