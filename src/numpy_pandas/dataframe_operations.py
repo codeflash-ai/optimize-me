@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
@@ -106,9 +109,11 @@ def apply_function(df: pd.DataFrame, column: str, func: Callable) -> List[Any]:
 
 def fillna(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
     result = df.copy()
-    for i in range(len(df)):
-        if pd.isna(df.iloc[i][column]):
-            result.iloc[i, df.columns.get_loc(column)] = value
+    col_idx = df.columns.get_loc(column)
+    mask = pd.isna(df[column])
+    # Only assign for rows where value is actually missing, and only in the requested column
+    if mask.any():
+        result.iloc[mask.values, col_idx] = value
     return result
 
 
