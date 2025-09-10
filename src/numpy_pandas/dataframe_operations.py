@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
@@ -209,33 +212,32 @@ def correlation(df: pd.DataFrame) -> dict[Tuple[str, str], float]:
     ]
     n_cols = len(numeric_columns)
     result = {}
+    # Convert once for performance
+    arrs = {col: df[col].to_numpy() for col in numeric_columns}
     for i in range(n_cols):
         col_i = numeric_columns[i]
+        arr_i = arrs[col_i]
         for j in range(n_cols):
             col_j = numeric_columns[j]
-            values_i = []
-            values_j = []
-            for k in range(len(df)):
-                if not pd.isna(df.iloc[k][col_i]) and not pd.isna(df.iloc[k][col_j]):
-                    values_i.append(df.iloc[k][col_i])
-                    values_j.append(df.iloc[k][col_j])
-            n = len(values_i)
+            arr_j = arrs[col_j]
+            # Mask to select only non-NaN pairs
+            mask = ~np.isnan(arr_i) & ~np.isnan(arr_j)
+            n = np.count_nonzero(mask)
             if n == 0:
                 result[(col_i, col_j)] = np.nan
                 continue
-            mean_i = sum(values_i) / n
-            mean_j = sum(values_j) / n
-            var_i = sum((x - mean_i) ** 2 for x in values_i) / n
-            var_j = sum((x - mean_j) ** 2 for x in values_j) / n
+            x = arr_i[mask]
+            y = arr_j[mask]
+            mean_i = x.mean()
+            mean_j = y.mean()
+            var_i = ((x - mean_i) ** 2).mean()
+            var_j = ((y - mean_j) ** 2).mean()
             std_i = var_i**0.5
             std_j = var_j**0.5
             if std_i == 0 or std_j == 0:
                 result[(col_i, col_j)] = np.nan
                 continue
-            cov = (
-                sum((values_i[k] - mean_i) * (values_j[k] - mean_j) for k in range(n))
-                / n
-            )
+            cov = ((x - mean_i) * (y - mean_j)).mean()
             corr = cov / (std_i * std_j)
             result[(col_i, col_j)] = corr
     return result
