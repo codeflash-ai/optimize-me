@@ -3,6 +3,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 from typing import Callable, Any
+from collections import defaultdict
 
 
 def dataframe_filter(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
@@ -62,31 +63,35 @@ def pivot_table(
     df: pd.DataFrame, index: str, columns: str, values: str, aggfunc: str = "mean"
 ) -> dict[Any, dict[Any, float]]:
     result = {}
+
     if aggfunc == "mean":
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
-    grouped_data = {}
-    for i in range(len(df)):
-        row = df.iloc[i]
-        index_val = row[index]
-        column_val = row[columns]
-        value = row[values]
-        if index_val not in grouped_data:
-            grouped_data[index_val] = {}
-        if column_val not in grouped_data[index_val]:
-            grouped_data[index_val][column_val] = []
-        grouped_data[index_val][column_val].append(value)
+
+    # Fast column extraction as numpy arrays
+    index_arr = df[index].values
+    columns_arr = df[columns].values
+    values_arr = df[values].values
+
+    grouped_data: dict[Any, dict[Any, list]] = defaultdict(lambda: defaultdict(list))
+    for idx_val, col_val, val in zip(index_arr, columns_arr, values_arr):
+        grouped_data[idx_val][col_val].append(val)
+
+    # Compute aggregation
     for index_val in grouped_data:
         result[index_val] = {}
         for column_val in grouped_data[index_val]:
