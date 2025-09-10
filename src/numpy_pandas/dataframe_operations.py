@@ -66,14 +66,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
@@ -117,8 +120,10 @@ def drop_duplicates(df: pd.DataFrame, subset: List[str] = None) -> pd.DataFrame:
         subset = df.columns.tolist()
     seen = set()
     keep_indices = []
-    for i in range(len(df)):
-        values = tuple(df.iloc[i][col] for col in subset)
+    # Use itertuples to efficiently iterate rows and avoid per-row/col indexing overhead
+    idx = df.index
+    for i, row in enumerate(df.itertuples(index=False, name=None)):
+        values = tuple(row[df.columns.get_loc(col)] for col in subset)
         if values not in seen:
             seen.add(values)
             keep_indices.append(i)
