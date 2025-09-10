@@ -41,14 +41,21 @@ def image_rotation(image: np.ndarray, angle_degrees: float) -> np.ndarray:
         else (new_height, new_width)
     )
     new_center_y, new_center_x = new_height // 2, new_width // 2
-    for y in range(new_height):
-        for x in range(new_width):
-            offset_y = y - new_center_y
-            offset_x = x - new_center_x
-            original_y = int(offset_y * cos_theta - offset_x * sin_theta + center_y)
-            original_x = int(offset_y * sin_theta + offset_x * cos_theta + center_x)
-            if 0 <= original_y < height and 0 <= original_x < width:
-                rotated[y, x] = image[original_y, original_x]
+    y, x = np.meshgrid(np.arange(new_height), np.arange(new_width), indexing="ij")
+    offset_y = y - new_center_y
+    offset_x = x - new_center_x
+    original_y = (offset_y * cos_theta - offset_x * sin_theta + center_y).astype(int)
+    original_x = (offset_y * sin_theta + offset_x * cos_theta + center_x).astype(int)
+    valid_mask = (
+        (0 <= original_y)
+        & (original_y < height)
+        & (0 <= original_x)
+        & (original_x < width)
+    )
+    if len(image.shape) > 2:
+        rotated[valid_mask] = image[original_y[valid_mask], original_x[valid_mask], :]
+    else:
+        rotated[valid_mask] = image[original_y[valid_mask], original_x[valid_mask]]
     return rotated
 
 
