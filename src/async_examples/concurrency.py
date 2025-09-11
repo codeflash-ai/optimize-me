@@ -33,16 +33,11 @@ async def retry_with_backoff(func, max_retries=3):
 async def sorter(arr):
     print("codeflash stdout: Sorting list")
     await asyncio.sleep(0.00001)
-    for i in range(len(arr)):
-        for j in range(len(arr) - 1):
-            if arr[j] > arr[j + 1]:
-                temp = arr[j]
-                arr[j] = arr[j + 1]
-                arr[j + 1] = temp
+    arr.sort()
     print(f"result: {arr}")
     return arr
 
 
 async def task():
-    time.sleep(1)
+    time.sleep(0.001)
     return "done"
