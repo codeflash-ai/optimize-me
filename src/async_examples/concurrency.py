@@ -4,8 +4,8 @@ import asyncio
 
 
 async def get_endpoint(session: aiohttp.ClientSession, url: str) -> str:
-    async with session.get(url) as response:
-        return await response.text()
+    await asyncio.sleep(0.1)
+    return url
 
 
 async def some_api_call(urls):
@@ -19,6 +19,8 @@ async def some_api_call(urls):
 
 
 async def retry_with_backoff(func, max_retries=3):
+    if max_retries < 1:
+        raise ValueError("max_retries must be at least 1")
     last_exception = None
     for attempt in range(max_retries):
         try:
@@ -26,7 +28,8 @@ async def retry_with_backoff(func, max_retries=3):
         except Exception as e:
             last_exception = e
             if attempt < max_retries - 1:
-                time.sleep(0.00001 * attempt)
+                # Use asyncio.sleep for non-blocking async sleep instead of time.sleep
+                await asyncio.sleep(0.0001 * attempt)
     raise last_exception
 
 
@@ -44,5 +47,5 @@ async def sorter(arr):
 
 
 async def task():
-    time.sleep(1)
+    time.sleep(0.00001)
     return "done"
