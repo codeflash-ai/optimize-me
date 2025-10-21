@@ -146,15 +146,19 @@ def bisection_method(
     epsilon: float = 1e-10,
     max_iter: int = 100,
 ) -> float:
-    if f(a) * f(b) > 0:
+    fa = f(a)
+    fb = f(b)
+    if fa * fb > 0:
         raise ValueError("Function must have opposite signs at endpoints")
     for _ in range(max_iter):
         c = (a + b) / 2
         fc = f(c)
         if abs(fc) < epsilon:
             return c
-        if f(a) * fc < 0:
+        if fa * fc < 0:
             b = c
+            fb = fc
         else:
             a = c
+            fa = fc
     return (a + b) / 2
