@@ -71,19 +71,22 @@ def sort_chat_inputs_first(self, vertices_layers: list[list[str]]) -> list[list[
 
     # If no chat inputs have dependencies, move them to first layer
     chat_inputs_first = []
+    filtered_layers = []
     for layer in vertices_layers:
-        layer_chat_inputs_first = [
-            vertex_id for vertex_id in layer if "ChatInput" in vertex_id
-        ]
+        layer_chat_inputs_first = []
+        layer_others = []
+        for vertex_id in layer:
+            if "ChatInput" in vertex_id:
+                layer_chat_inputs_first.append(vertex_id)
+            else:
+                layer_others.append(vertex_id)
         chat_inputs_first.extend(layer_chat_inputs_first)
-        for vertex_id in layer_chat_inputs_first:
-            # Remove the ChatInput from the layer
-            layer.remove(vertex_id)
+        filtered_layers.append(layer_others)
 
     if not chat_inputs_first:
         return vertices_layers
 
-    return [chat_inputs_first, *vertices_layers]
+    return [chat_inputs_first, *filtered_layers]
 
 
 # Function to find the node with highest degree (most connections)
