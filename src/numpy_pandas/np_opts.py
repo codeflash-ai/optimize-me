@@ -26,16 +26,8 @@ def naive_matrix_determinant(matrix: List[List[float]]) -> float:
 
     determinant = 0
     for j in range(n):
-        # Create submatrix by removing first row and column j
-        submatrix = []
-        for i in range(1, n):
-            row = []
-            for k in range(n):
-                if k != j:
-                    row.append(matrix[i][k])
-            submatrix.append(row)
-
-        sign = (-1) ** j
+        submatrix = [row[:j] + row[j + 1 :] for row in matrix[1:]]
+        sign = -1 if j & 1 else 1
         determinant += sign * matrix[0][j] * naive_matrix_determinant(submatrix)
 
     return determinant
