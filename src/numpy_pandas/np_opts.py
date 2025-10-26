@@ -7,11 +7,19 @@ import random
 
 def binomial_coefficient_recursive(n: int, k: int) -> int:
     """Calculate binomial coefficient using recursive formula."""
-    if k == 0 or k == n:
-        return 1
-    return binomial_coefficient_recursive(
-        n - 1, k - 1
-    ) + binomial_coefficient_recursive(n - 1, k)
+    memo = {}
+
+    def helper(n: int, k: int) -> int:
+        if k == 0 or k == n:
+            return 1
+        key = (n, k)
+        if key in memo:
+            return memo[key]
+        result = helper(n - 1, k - 1) + helper(n - 1, k)
+        memo[key] = result
+        return result
+
+    return helper(n, k)
 
 
 def naive_matrix_determinant(matrix: List[List[float]]) -> float:
