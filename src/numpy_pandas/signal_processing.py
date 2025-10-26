@@ -5,10 +5,22 @@ def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     signal_len = len(signal)
     kernel_len = len(kernel)
     result_len = signal_len - kernel_len + 1
-    result = np.zeros(result_len)
-    for i in range(result_len):
-        for j in range(kernel_len):
-            result[i] += signal[i + j] * kernel[j]
+    result = np.empty(result_len)
+    # Avoid explicit Python loops: use stride tricks and vectorized multiplication
+    if result_len <= 0:
+        # To preserve behavioral preservation: for pathological (invalid) cases, np.zeros(result_len) returns empty array
+        return np.zeros(result_len)
+    # Construct a view of 'signal' with sliding windows of kernel_len
+    # This avoids explicit looping over i and j
+    # The view has shape (result_len, kernel_len)
+    signal_windows = np.lib.stride_tricks.as_strided(
+        signal,
+        shape=(result_len, kernel_len),
+        strides=(signal.strides[0], signal.strides[0]),
+    )
+    # result[i] = np.dot(signal[i:i+kernel_len], kernel)
+    # So we do a matrix multiplication
+    result[:] = np.dot(signal_windows, kernel)
     return result
 
 
