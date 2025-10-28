@@ -69,14 +69,23 @@ def binomial_coefficient(n: int, k: int) -> int:
 
 
 def coin_change(coins: list[int], amount: int, index: int) -> int:
-    if amount == 0:
-        return 1
-    if amount < 0 or index >= len(coins):
-        return 0
+    memo: dict[tuple[int, int], int] = {}
 
-    return coin_change(coins, amount - coins[index], index) + coin_change(
-        coins, amount, index + 1
-    )
+    def dp(amount: int, index: int) -> int:
+        if amount == 0:
+            return 1
+        if amount < 0 or index >= len(coins):
+            return 0
+
+        key = (amount, index)
+        if key in memo:
+            return memo[key]
+
+        result = dp(amount - coins[index], index) + dp(amount, index + 1)
+        memo[key] = result
+        return result
+
+    return dp(amount, index)
 
 
 def knapsack(weights: list[int], values: list[int], capacity: int, n: int) -> int:
