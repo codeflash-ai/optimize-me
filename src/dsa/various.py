@@ -39,10 +39,8 @@ def fibonacci(n):
 
 
 def string_concat(n):
-    s = ""
-    for i in range(n):
-        s += str(i)
-    return s
+    s = [str(i) for i in range(n)]
+    return "".join(s)
 
 
 def matrix_sum(matrix: list[list[int]]) -> list[int]:
