@@ -72,10 +72,13 @@ def regex_match(strings: list[str], pattern: str) -> list[str]:
 
 
 def is_palindrome(text: str) -> bool:
-    cleaned_text = "".join(c.lower() for c in text if c.isalnum())
-    for i in range(len(cleaned_text) // 2):
-        if cleaned_text[i] != cleaned_text[len(cleaned_text) - 1 - i]:
+    cleaned_chars = [c.lower() for c in text if c.isalnum()]
+    left, right = 0, len(cleaned_chars) - 1
+    while left < right:
+        if cleaned_chars[left] != cleaned_chars[right]:
             return False
+        left += 1
+        right -= 1
     return True
 
 
