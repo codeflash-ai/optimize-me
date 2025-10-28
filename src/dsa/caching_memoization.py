@@ -6,17 +6,19 @@ def time_based_cache(expiry_seconds: int) -> Callable:
     """Manual implementation of a time-based cache decorator."""
 
     def decorator(func: Callable) -> Callable:
-        cache: dict[str, tuple[Any, float]] = {}
+        cache: dict[Any, tuple[Any, float]] = {}
 
         def wrapper(*args, **kwargs) -> Any:
-            key_parts = [repr(arg) for arg in args]
-            key_parts.extend(f"{k}:{repr(v)}" for k, v in sorted(kwargs.items()))
-            key = ":".join(key_parts)
+            if kwargs:
+                key = (args, tuple(sorted(kwargs.items())))
+            else:
+                key = args
 
             current_time = time.time()
 
-            if key in cache:
-                result, timestamp = cache[key]
+            cached_entry = cache.get(key)
+            if cached_entry is not None:
+                result, timestamp = cached_entry
                 if current_time - timestamp < expiry_seconds:
                     return result
 
