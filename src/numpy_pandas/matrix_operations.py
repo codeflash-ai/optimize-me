@@ -33,11 +33,10 @@ def matrix_inverse(matrix: np.ndarray) -> np.ndarray:
     augmented = np.hstack((matrix, identity))
     for i in range(n):
         pivot = augmented[i, i]
-        augmented[i] = augmented[i] / pivot
-        for j in range(n):
-            if i != j:
-                factor = augmented[j, i]
-                augmented[j] = augmented[j] - factor * augmented[i]
+        augmented[i] /= pivot
+        mask = np.arange(n) != i
+        factors = augmented[mask, i][:, None]
+        augmented[mask] -= factors * augmented[i]
     return augmented[:, n:]
 
 
