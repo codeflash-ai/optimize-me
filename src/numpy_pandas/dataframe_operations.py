@@ -34,26 +34,39 @@ def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, 
 def dataframe_merge(
     left: pd.DataFrame, right: pd.DataFrame, left_on: str, right_on: str
 ) -> pd.DataFrame:
-    result_data = []
+    # Precompute column names
     left_cols = list(left.columns)
     right_cols = [col for col in right.columns if col != right_on]
+
+    # Convert right DataFrame to dict of groupby lists of row dicts for fast lookup
     right_dict = {}
-    for i in range(len(right)):
-        key = right.iloc[i][right_on]
+    # Use DataFrame.itertuples() for much faster row access than iloc[n]
+    right_tuple_cols = right.columns
+    right_on_idx = right_tuple_cols.get_loc(right_on)
+    for row in right.itertuples(index=False, name=None):
+        key = row[right_on_idx]
         if key not in right_dict:
             right_dict[key] = []
-        right_dict[key].append(i)
-    for i in range(len(left)):
-        left_row = left.iloc[i]
-        key = left_row[left_on]
+        # Store the tuple directly (faster than dict) but keep column order
+        right_dict[key].append(row)
+
+    # Prepare mapping from column to index for both left and right for fast access
+    left_tuple_cols = left.columns
+    left_col_idx = {col: idx for idx, col in enumerate(left_tuple_cols)}
+    right_col_idx = {col: idx for idx, col in enumerate(right_tuple_cols)}
+
+    result_data = []
+
+    for row in left.itertuples(index=False, name=None):
+        key = row[left_col_idx[left_on]]
         if key in right_dict:
-            for right_idx in right_dict[key]:
-                right_row = right.iloc[right_idx]
+            for right_row in right_dict[key]:
+                # Build a new row dict using column indices instead of Series overhead
                 new_row = {}
                 for col in left_cols:
-                    new_row[col] = left_row[col]
+                    new_row[col] = row[left_col_idx[col]]
                 for col in right_cols:
-                    new_row[col] = right_row[col]
+                    new_row[col] = right_row[right_col_idx[col]]
                 result_data.append(new_row)
     return pd.DataFrame(result_data)
 
@@ -66,14 +79,17 @@ def pivot_table(
 
         def agg_func(values):
             return sum(values) / len(values)
+
     elif aggfunc == "sum":
 
         def agg_func(values):
             return sum(values)
+
     elif aggfunc == "count":
 
         def agg_func(values):
             return len(values)
+
     else:
         raise ValueError(f"Unsupported aggregation function: {aggfunc}")
     grouped_data = {}
