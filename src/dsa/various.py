@@ -27,9 +27,9 @@ class Stack:
         return None
 
     def peek(self):
-        if self.stack:
-            return self.stack[0]
-        return None
+        if not self.stack:
+            return None
+        return self.stack[0]
 
 
 def fibonacci(n):
