@@ -51,12 +51,14 @@ def matrix_sum(matrix: list[list[int]]) -> list[int]:
 
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
     visited = []
+    visited_set = set()  # For O(1) lookup of visited nodes
 
     def dfs(n: int) -> None:
-        if n in visited:
+        if n in visited_set:
             return
         visited.append(n)
-        for neighbor in graph.get(n, []):
+        visited_set.add(n)
+        for neighbor in graph.get(n, ()):
             dfs(neighbor)
 
     dfs(node)
