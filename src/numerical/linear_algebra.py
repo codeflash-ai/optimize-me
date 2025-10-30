@@ -1,17 +1,79 @@
 from typing import List, Tuple
 
-import math
-from typing import Callable
-import random
+import numpy as np
 
 
-def binomial_coefficient_recursive(n: int, k: int) -> int:
-    """Calculate binomial coefficient using recursive formula."""
-    if k == 0 or k == n:
-        return 1
-    return binomial_coefficient_recursive(
-        n - 1, k - 1
-    ) + binomial_coefficient_recursive(n - 1, k)
+def numpy_matmul(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    rows_A, cols_A = A.shape
+    rows_B, cols_B = B.shape
+    if cols_A != rows_B:
+        raise ValueError("Incompatible matrices")
+    result = np.zeros((rows_A, cols_B))
+    for i in range(rows_A):
+        for j in range(cols_B):
+            for k in range(cols_A):
+                result[i, j] += A[i, k] * B[k, j]
+    return result
+
+
+def dot_product(a: np.ndarray, b: np.ndarray) -> float:
+    if len(a) != len(b):
+        raise ValueError("Vectors must have the same length")
+    result = 0
+    for i in range(len(a)):
+        result += a[i] * b[i]
+    return result
+
+
+def matrix_inverse(matrix: np.ndarray) -> np.ndarray:
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("Matrix must be square")
+    n = matrix.shape[0]
+    identity = np.eye(n)
+    augmented = np.hstack((matrix, identity))
+    for i in range(n):
+        pivot = augmented[i, i]
+        augmented[i] = augmented[i] / pivot
+        for j in range(n):
+            if i != j:
+                factor = augmented[j, i]
+                augmented[j] = augmented[j] - factor * augmented[i]
+    return augmented[:, n:]
+
+
+def matrix_multiply(A: List[List[float]], B: List[List[float]]) -> List[List[float]]:
+    if not A or not B or len(A[0]) != len(B):
+        raise ValueError("Invalid matrix dimensions for multiplication")
+    rows_A = len(A)
+    cols_A = len(A[0])
+    cols_B = len(B[0])
+    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
+    for i in range(rows_A):
+        for j in range(cols_B):
+            for k in range(cols_A):
+                result[i][j] += A[i][k] * B[k][j]
+    return result
+
+
+def matrix_decomposition_LU(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    n = A.shape[0]
+    L = np.zeros((n, n))
+    U = np.zeros((n, n))
+    for i in range(n):
+        for k in range(i, n):
+            sum_val = 0
+            for j in range(i):
+                sum_val += L[i, j] * U[j, k]
+            U[i, k] = A[i, k] - sum_val
+        L[i, i] = 1
+        for k in range(i + 1, n):
+            sum_val = 0
+            for j in range(i):
+                sum_val += L[k, j] * U[j, i]
+            if U[i, i] == 0:
+                raise ValueError("Cannot perform LU decomposition")
+            L[k, i] = (A[k, i] - sum_val) / U[i, i]
+    return L, U
 
 
 def naive_matrix_determinant(matrix: List[List[float]]) -> float:
@@ -76,36 +138,6 @@ def slow_matrix_inverse(matrix: List[List[float]]) -> List[List[float]]:
     return inverse
 
 
-def monte_carlo_pi(num_samples: int) -> float:
-    """Estimate π using Monte Carlo method."""
-    inside_circle = 0
-
-    for _ in range(num_samples):
-        x = random.uniform(-1, 1)
-        y = random.uniform(-1, 1)
-
-        if x**2 + y**2 <= 1:
-            inside_circle += 1
-
-    return 4 * inside_circle / num_samples
-
-
-def sieve_of_eratosthenes(n: int) -> List[int]:
-    """Find all primes up to n using sieve of Eratosthenes."""
-    if n <= 1:
-        return []
-
-    is_prime = [True] * (n + 1)
-    is_prime[0] = is_prime[1] = False
-
-    for i in range(2, int(math.sqrt(n)) + 1):
-        if is_prime[i]:
-            for j in range(i * i, n + 1, i):
-                is_prime[j] = False
-
-    return [i for i in range(2, n + 1) if is_prime[i]]
-
-
 def linear_equation_solver(A: List[List[float]], b: List[float]) -> List[float]:
     """Solve system of linear equations Ax = b using Gaussian elimination."""
     n = len(A)
@@ -139,63 +171,3 @@ def linear_equation_solver(A: List[List[float]], b: List[float]) -> List[float]:
         x[i] /= augmented[i][i]
 
     return x
-
-
-def newton_raphson_sqrt(x: float, epsilon: float = 1e-10, max_iter: int = 100) -> float:
-    """Calculate square root using Newton-Raphson method."""
-    if x < 0:
-        raise ValueError("Cannot compute square root of negative number")
-
-    if x == 0:
-        return 0
-
-    guess = x / 2  # Initial guess
-
-    for _ in range(max_iter):
-        next_guess = 0.5 * (guess + x / guess)
-        if abs(next_guess - guess) < epsilon:
-            return next_guess
-        guess = next_guess
-
-    return guess
-
-
-def lagrange_interpolation(points: List[Tuple[float, float]], x: float) -> float:
-    """Interpolate a function value using Lagrange polynomials."""
-    result = 0.0
-    n = len(points)
-
-    for i in range(n):
-        term = points[i][1]
-        for j in range(n):
-            if i != j:
-                term *= (x - points[j][0]) / (points[i][0] - points[j][0])
-        result += term
-
-    return result
-
-
-def bisection_method(
-    f: Callable[[float], float],
-    a: float,
-    b: float,
-    epsilon: float = 1e-10,
-    max_iter: int = 100,
-) -> float:
-    """Find a root of function f using bisection method."""
-    if f(a) * f(b) > 0:
-        raise ValueError("Function must have opposite signs at endpoints")
-
-    for _ in range(max_iter):
-        c = (a + b) / 2
-        fc = f(c)
-
-        if abs(fc) < epsilon:
-            return c
-
-        if f(a) * fc < 0:
-            b = c
-        else:
-            a = c
-
-    return (a + b) / 2

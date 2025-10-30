@@ -1,15 +1,57 @@
-from typing import Any, NewType
+from __future__ import annotations
+
 import networkx as nx
 
 
-# derived from https://github.com/langflow-ai/langflow/pull/5261
+def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
+    visited = []
+
+    def dfs(n: int) -> None:
+        if n in visited:
+            return
+        visited.append(n)
+        for neighbor in graph.get(n, []):
+            dfs(neighbor)
+
+    dfs(node)
+    return visited
+
+
+class PathFinder:
+    def __init__(self, graph: dict[str, list[str]]):
+        self.graph = graph
+
+    def find_shortest_path(self, start: str, end: str) -> list[str]:
+        if start not in self.graph or end not in self.graph:
+            return []
+
+        queue = [[start]]
+        visited = set([start])
+
+        while queue:
+            path = queue.pop(0)
+            node = path[-1]
+
+            if node == end:
+                return path
+
+            for neighbor in self.graph.get(node, []):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    new_path = list(path)
+                    new_path.append(neighbor)
+                    queue.append(new_path)
+
+        return []  # No path found
+
+
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
     return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
 
 
-# Function to find all leaf nodes (nodes with no outgoing edges)
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
+    """Find all leaf nodes (nodes with no outgoing edges)."""
     leaf_nodes = []
     for node in nodes:
         is_leaf = True
@@ -22,31 +64,8 @@ def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     return leaf_nodes
 
 
-JsonRef = NewType("JsonRef", str)
-
-
-# derived from https://github.com/pydantic/pydantic/pull/9650
-def _get_all_json_refs(item: Any) -> set[JsonRef]:
-    """Get all the definitions references from a JSON schema."""
-    refs: set[JsonRef] = set()
-    if isinstance(item, dict):
-        for key, value in item.items():
-            if key == "$ref" and isinstance(value, str):
-                # the isinstance check ensures that '$ref' isn't the name of a property, etc.
-                refs.add(JsonRef(value))
-            elif isinstance(value, dict):
-                refs.update(_get_all_json_refs(value))
-            elif isinstance(value, list):
-                for item in value:
-                    refs.update(_get_all_json_refs(item))
-    elif isinstance(item, list):
-        for item in item:
-            refs.update(_get_all_json_refs(item))
-    return refs
-
-
-# derived from https://github.com/langflow-ai/langflow/pull/5262
 def find_cycle_vertices(edges):
+    """Find all vertices that are part of cycles in the graph."""
     # Create a directed graph from the edges
     graph = nx.DiGraph(edges)
 
@@ -59,37 +78,10 @@ def find_cycle_vertices(edges):
     return sorted(cycle_vertices)
 
 
-# derived from https://github.com/langflow-ai/langflow/pull/5263
-def sort_chat_inputs_first(self, vertices_layers: list[list[str]]) -> list[list[str]]:
-    # First check if any chat inputs have dependencies
-    for layer in vertices_layers:
-        for vertex_id in layer:
-            if "ChatInput" in vertex_id and self.get_predecessors(
-                self.get_vertex(vertex_id)
-            ):
-                return vertices_layers
-
-    # If no chat inputs have dependencies, move them to first layer
-    chat_inputs_first = []
-    for layer in vertices_layers:
-        layer_chat_inputs_first = [
-            vertex_id for vertex_id in layer if "ChatInput" in vertex_id
-        ]
-        chat_inputs_first.extend(layer_chat_inputs_first)
-        for vertex_id in layer_chat_inputs_first:
-            # Remove the ChatInput from the layer
-            layer.remove(vertex_id)
-
-    if not chat_inputs_first:
-        return vertices_layers
-
-    return [chat_inputs_first, *vertices_layers]
-
-
-# Function to find the node with highest degree (most connections)
 def find_node_with_highest_degree(
     nodes: list[str], connections: dict[str, list[str]]
 ) -> str:
+    """Find the node with highest degree (most connections)."""
     max_degree = -1
     max_degree_node = None
 
@@ -111,6 +103,7 @@ def find_node_with_highest_degree(
 
 
 def find_node_clusters(nodes: list[dict], edges: list[dict]) -> list[list[dict]]:
+    """Find connected components (clusters) in the graph."""
     # Create node ID to node mapping for easy lookup
     node_map = {node["id"]: node for node in nodes}
 
@@ -159,6 +152,7 @@ def find_node_clusters(nodes: list[dict], edges: list[dict]) -> list[list[dict]]
 def calculate_node_betweenness(
     nodes: list[str], edges: list[dict[str, str]]
 ) -> dict[str, float]:
+    """Calculate betweenness centrality for each node."""
     betweenness = {node: 0.0 for node in nodes}
 
     # For each pair of nodes, find all shortest paths and count paths through each node
@@ -204,6 +198,7 @@ def calculate_node_betweenness(
 def find_strongly_connected_components(
     nodes: list[str], edges: list[dict[str, str]]
 ) -> list[list[str]]:
+    """Find strongly connected components using Kosaraju's algorithm."""
     # Build adjacency list
     graph = {}
     for node in nodes:

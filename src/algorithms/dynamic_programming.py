@@ -1,34 +1,14 @@
-from typing import Callable, Any
-import time
+from __future__ import annotations
 
 
-def time_based_cache(expiry_seconds: int) -> Callable:
-    """Manual implementation of a time-based cache decorator."""
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
 
-    def decorator(func: Callable) -> Callable:
-        cache: dict[str, tuple[Any, float]] = {}
 
-        def wrapper(*args, **kwargs) -> Any:
-            key_parts = [repr(arg) for arg in args]
-            key_parts.extend(f"{k}:{repr(v)}" for k, v in sorted(kwargs.items()))
-            key = ":".join(key_parts)
-
-            current_time = time.time()
-
-            if key in cache:
-                result, timestamp = cache[key]
-                if current_time - timestamp < expiry_seconds:
-                    return result
-
-            result = func(*args, **kwargs)
-
-            cache[key] = (result, current_time)
-
-            return result
-
-        return wrapper
-
-    return decorator
+def matrix_sum(matrix: list[list[int]]) -> list[int]:
+    return [sum(matrix[i]) for i in range(len(matrix)) if sum(matrix[i]) > 0]
 
 
 def matrix_chain_order(matrices: list[tuple[int, int]]) -> int:
@@ -60,12 +40,6 @@ def matrix_chain_order(matrices: list[tuple[int, int]]) -> int:
         return min_ops
 
     return dp(0, n - 1)
-
-
-def binomial_coefficient(n: int, k: int) -> int:
-    if k == 0 or k == n:
-        return 1
-    return binomial_coefficient(n - 1, k - 1) + binomial_coefficient(n - 1, k)
 
 
 def coin_change(coins: list[int], amount: int, index: int) -> int:
