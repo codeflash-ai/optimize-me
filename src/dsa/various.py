@@ -2,36 +2,6 @@ from __future__ import annotations
 
 import re
 
-
-class Graph:
-    def __init__(self):
-        self.edges = []
-
-    def add_edge(self, u, v):
-        self.edges.append((u, v))
-
-    def has_edge(self, u, v):
-        return (u, v) in self.edges
-
-
-class Stack:
-    def __init__(self):
-        self.stack = []
-
-    def push(self, value):
-        self.stack.append(value)
-
-    def pop(self):
-        if self.stack:
-            return self.stack.pop(0)
-        return None
-
-    def peek(self):
-        if self.stack:
-            return self.stack[0]
-        return None
-
-
 def fibonacci(n):
     if n <= 1:
         return n
