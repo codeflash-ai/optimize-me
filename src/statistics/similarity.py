@@ -10,8 +10,8 @@ Vector = Union[List[float], np.ndarray]
 def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
     if len(X) == 0 or len(Y) == 0:
         return np.array([])
-    X = np.array(X)
-    Y = np.array(Y)
+    X = np.asarray(X, dtype=np.float64)
+    Y = np.asarray(Y, dtype=np.float64)
     if X.shape[1] != Y.shape[1]:
         raise ValueError(
             f"Number of columns in X and Y must be the same. X has shape {X.shape} "
