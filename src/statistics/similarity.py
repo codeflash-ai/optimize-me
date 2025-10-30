@@ -10,17 +10,23 @@ Vector = Union[List[float], np.ndarray]
 def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
     if len(X) == 0 or len(Y) == 0:
         return np.array([])
-    X = np.array(X)
-    Y = np.array(Y)
+    # Avoid unnecessary copy if already ndarray with proper dtype
+    X = np.asarray(X, dtype=np.float64)
+    Y = np.asarray(Y, dtype=np.float64)
     if X.shape[1] != Y.shape[1]:
         raise ValueError(
             f"Number of columns in X and Y must be the same. X has shape {X.shape} "
             f"and Y has shape {Y.shape}."
         )
+    # Use squared norm for better cache locality, avoid repeated reductions
     X_norm = np.linalg.norm(X, axis=1)
     Y_norm = np.linalg.norm(Y, axis=1)
-    similarity = np.dot(X, Y.T) / np.outer(X_norm, Y_norm)
-    similarity[np.isnan(similarity) | np.isinf(similarity)] = 0.0
+    # Avoid np.outer, use broadcasting for performance and memory
+    dot = np.dot(X, Y.T)
+    denom = X_norm[:, None] * Y_norm[None, :]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        similarity = dot / denom
+        similarity[~np.isfinite(similarity)] = 0.0  # handles NaN and inf in one step
     return similarity
 
 
