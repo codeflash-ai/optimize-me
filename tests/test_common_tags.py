@@ -1,4 +1,4 @@
-from src.dsa.various import find_common_tags
+from src.algorithms.string import find_common_tags
 
 def test_common_tags_1() -> None:
     articles_1 = [

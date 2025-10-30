@@ -1,5 +1,5 @@
-from src.dsa.nodes import find_cycle_vertices, find_node_clusters
-from src.dsa.caching_memoization import time_based_cache
+from src.algorithms.graph import find_cycle_vertices, find_node_clusters
+from src.algorithms.caching import time_based_cache
 import time
 import pytest
 
