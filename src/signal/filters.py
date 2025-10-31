@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
 
 
 def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
@@ -6,9 +7,14 @@ def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     kernel_len = len(kernel)
     result_len = signal_len - kernel_len + 1
     result = np.zeros(result_len)
-    for i in range(result_len):
-        for j in range(kernel_len):
-            result[i] += signal[i + j] * kernel[j]
+    if result_len <= 0:
+        return result
+
+    stride = signal.strides[0]
+    windows = as_strided(
+        signal, shape=(result_len, kernel_len), strides=(stride, stride)
+    )
+    result[:] = np.dot(windows, kernel)
     return result
 
 
