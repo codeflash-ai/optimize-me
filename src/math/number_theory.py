@@ -4,9 +4,9 @@ import math
 
 def gcd_recursive(a: int, b: int) -> int:
     """Calculate greatest common divisor using Euclidean algorithm with recursion."""
-    if b == 0:
-        return a
-    return gcd_recursive(b, a % b)
+    while b != 0:
+        a, b = b, a % b
+    return a
 
 
 def sieve_of_eratosthenes(n: int) -> List[int]:
