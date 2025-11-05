@@ -3,7 +3,10 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
+from src.telemetry.decorators import trace_function
 
+
+@trace_function
 def describe(series: pd.Series) -> dict[str, float]:
     values = [v for v in series if not pd.isna(v)]
     n = len(values)
@@ -41,6 +44,7 @@ def describe(series: pd.Series) -> dict[str, float]:
     }
 
 
+@trace_function
 def correlation(df: pd.DataFrame) -> dict[Tuple[str, str], float]:
     numeric_columns = [
         col for col in df.columns if np.issubdtype(df[col].dtype, np.number)

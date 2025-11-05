@@ -3,7 +3,10 @@ from typing import List, Callable, Any
 import numpy as np
 import pandas as pd
 
+from src.telemetry.decorators import trace_function
 
+
+@trace_function
 def dataframe_filter(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
     indices = []
     for i in range(len(df)):
@@ -12,6 +15,7 @@ def dataframe_filter(df: pd.DataFrame, column: str, value: Any) -> pd.DataFrame:
     return df.iloc[indices].reset_index(drop=True)
 
 
+@trace_function
 def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, float]:
     sums = {}
     counts = {}
@@ -30,6 +34,7 @@ def groupby_mean(df: pd.DataFrame, group_col: str, value_col: str) -> dict[Any, 
     return result
 
 
+@trace_function
 def dataframe_merge(
     left: pd.DataFrame, right: pd.DataFrame, left_on: str, right_on: str
 ) -> pd.DataFrame:

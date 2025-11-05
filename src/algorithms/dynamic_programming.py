@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+from src.telemetry.decorators import trace_function
 
+
+@trace_function
 def fibonacci(n):
     if n <= 1:
         return n
     return fibonacci(n - 1) + fibonacci(n - 2)
 
 
+@trace_function
 def matrix_sum(matrix: list[list[int]]) -> list[int]:
     return [sum(matrix[i]) for i in range(len(matrix)) if sum(matrix[i]) > 0]
 
 
+@trace_function
 def matrix_chain_order(matrices: list[tuple[int, int]]) -> int:
     """
     Find the minimum number of operations needed to multiply a chain of matrices.
@@ -42,6 +47,7 @@ def matrix_chain_order(matrices: list[tuple[int, int]]) -> int:
     return dp(0, n - 1)
 
 
+@trace_function
 def coin_change(coins: list[int], amount: int, index: int) -> int:
     if amount == 0:
         return 1
@@ -53,6 +59,7 @@ def coin_change(coins: list[int], amount: int, index: int) -> int:
     )
 
 
+@trace_function
 def knapsack(weights: list[int], values: list[int], capacity: int, n: int) -> int:
     if n == 0 or capacity == 0:
         return 0

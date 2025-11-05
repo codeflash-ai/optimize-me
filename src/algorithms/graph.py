@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import networkx as nx
 
+from src.telemetry.decorators import trace_function
 
+
+@trace_function
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
     visited = []
 
@@ -21,6 +24,7 @@ class PathFinder:
     def __init__(self, graph: dict[str, list[str]]):
         self.graph = graph
 
+    @trace_function
     def find_shortest_path(self, start: str, end: str) -> list[str]:
         if start not in self.graph or end not in self.graph:
             return []
@@ -102,6 +106,7 @@ def find_node_with_highest_degree(
     return max_degree_node
 
 
+@trace_function
 def find_node_clusters(nodes: list[dict], edges: list[dict]) -> list[list[dict]]:
     """Find connected components (clusters) in the graph."""
     # Create node ID to node mapping for easy lookup
@@ -149,6 +154,7 @@ def find_node_clusters(nodes: list[dict], edges: list[dict]) -> list[list[dict]]
     return clusters
 
 
+@trace_function
 def calculate_node_betweenness(
     nodes: list[str], edges: list[dict[str, str]]
 ) -> dict[str, float]:

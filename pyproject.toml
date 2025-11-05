@@ -7,6 +7,10 @@ dependencies = [
     "codeflash>=0.17.3",
     "networkx>=3.5",
     "numpy>=2.3.3",
+    "opentelemetry-api>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-instrumentation>=0.59b0",
+    "opentelemetry-sdk>=1.38.0",
     "pandas>=2.3.3",
 ]
 
