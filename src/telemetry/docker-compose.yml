@@ -11,8 +11,43 @@ services:
       - "4318:4318" # OTLP HTTP receiver
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - telemetry-network
     # Optional: Add OpenTelemetry Collector for advanced processing
     # Uncomment the otel-collector service below if needed
+
+  # Datadog Agent - For sending traces to Datadog APM
+  # Requires DD_API_KEY environment variable to be set
+  # Start with: docker-compose --profile datadog up -d datadog-agent
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: datadog-agent
+    ports:
+      - "8126:8126"    # Datadog Agent trace endpoint (native protocol)
+      - "4317:4317"    # OTLP gRPC receiver (Agent 7.17+)
+      - "4318:4318"    # OTLP HTTP receiver (Agent 7.17+)
+    environment:
+      # Required: Set your Datadog API key before starting
+      # Get it from: https://app.datadoghq.com/organization-settings/api-keys
+      - DD_API_KEY=${DD_API_KEY:-}
+      # Optional: Datadog site (default: datadoghq.com)
+      - DD_SITE=${DD_SITE:-datadoghq.com}
+      # Enable APM
+      - DD_APM_ENABLED=true
+      # Enable OTLP receiver
+      - DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT=0.0.0.0:4317
+      - DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=0.0.0.0:4318
+      # Optional: Log level
+      - DD_LOG_LEVEL=${DD_LOG_LEVEL:-INFO}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    networks:
+      - telemetry-network
+    # Use profile so it only starts when explicitly requested
+    profiles:
+      - datadog
 
   # Optional: OpenTelemetry Collector for advanced processing/routing
   # Uncomment if you need to process traces before sending to Jaeger
@@ -27,4 +62,10 @@ services:
   #     - "4318:4318"  # OTLP HTTP receiver
   #   depends_on:
   #     - jaeger
+  #   networks:
+  #     - telemetry-network
+
+networks:
+  telemetry-network:
+    driver: bridge
 

@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from typing import Optional
 
@@ -9,6 +10,14 @@ from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
 from src.telemetry.config import TelemetryConfig
+
+# Optional Datadog exporter
+try:
+    from opentelemetry.exporter.datadog import DatadogSpanExporter
+    DATADOG_AVAILABLE = True
+except ImportError:
+    DatadogSpanExporter = None
+    DATADOG_AVAILABLE = False
 
 # Note: For true auto-instrumentation, use the `opentelemetry-instrument` command
 # This programmatic setup uses individual instrumentors as a fallback
@@ -109,13 +118,29 @@ def setup_telemetry(
     elif exporter_type == "otlp":
         exporter = OTLPSpanExporter(endpoint=exporter_endpoint)
         logger.info(f"Using OTLP exporter with endpoint: {exporter_endpoint}")
+    elif exporter_type == "datadog":
+        if not DATADOG_AVAILABLE:
+            logger.error("Datadog exporter not available. Install with: pip install opentelemetry-exporter-datadog")
+            exporter = ConsoleSpanExporter()
+            logger.warning("Falling back to console exporter")
+        else:
+            # Get Datadog configuration from environment or use defaults
+            datadog_agent_url = os.getenv("DD_AGENT_URL", "http://localhost:8126")
+            service_name = service_name or TelemetryConfig.service_name
+            exporter = DatadogSpanExporter(
+                agent_url=datadog_agent_url,
+                service=service_name,
+                env=os.getenv("DD_ENV", "development"),
+                version=service_version or TelemetryConfig.service_version,
+            )
+            logger.info(f"Using Datadog exporter with agent URL: {datadog_agent_url}")
     else:
         exporter = ConsoleSpanExporter()
         logger.warning(f"Unknown exporter type '{exporter_type}', using console")
 
     # Add span processor (works with existing or new provider)
     # Use SimpleSpanProcessor for console exporter to see traces immediately
-    # Use BatchSpanProcessor for OTLP exporter for better performance
+    # Use BatchSpanProcessor for OTLP and Datadog exporters for better performance
     if exporter_type == "console":
         span_processor = SimpleSpanProcessor(exporter)
     else:
