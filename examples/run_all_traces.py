@@ -1,9 +1,23 @@
 """
 Run all instrumented functions and display their trace outputs.
 
-This script demonstrates all functions decorated with @trace_function
-and shows their OpenTelemetry trace spans in the console.
+This script demonstrates OpenTelemetry auto-instrumentation.
+Functions are automatically instrumented via OpenTelemetry auto-instrumentation
+(no decorators needed for libraries like NumPy and Pandas).
+
+Usage:
+    # With console exporter (default)
+    python examples/run_all_traces.py
+    
+    # With OTLP exporter (requires docker-compose up)
+    # First: cd src/telemetry && docker-compose up -d
+    OTEL_TRACES_EXPORTER=otlp OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 python examples/run_all_traces.py
+    
+    # Or use opentelemetry-instrument command (recommended)
+    # Note: Set OTEL_TRACES_EXPORTER=console to see traces in console
+    OTEL_TRACES_EXPORTER=console opentelemetry-instrument python examples/run_all_traces.py
 """
+import os
 import sys
 from pathlib import Path
 
@@ -21,14 +35,28 @@ from src.algorithms.dynamic_programming import fibonacci, matrix_sum, matrix_cha
 from src.data_processing.dataframe import dataframe_filter, groupby_mean, dataframe_merge
 from src.statistics.descriptive import describe, correlation
 
-# Initialize OpenTelemetry with console exporter
+# Initialize OpenTelemetry with auto-instrumentation
+# Uses environment variables if set, otherwise defaults to console exporter
 print("=" * 80)
-print("Initializing OpenTelemetry...")
+print("Initializing OpenTelemetry with auto-instrumentation...")
 print("=" * 80)
+
+# Enable debug logging if needed
+import logging
+if os.getenv("OTEL_LOG_LEVEL", "").upper() == "DEBUG":
+    logging.basicConfig(level=logging.DEBUG)
+
+# Check if running via opentelemetry-instrument (which sets up OTel automatically)
+# opentelemetry-instrument uses OTEL_TRACES_EXPORTER, but we also support OTEL_EXPORTER_TYPE for compatibility
+exporter_type = os.getenv("OTEL_TRACES_EXPORTER") or os.getenv("OTEL_EXPORTER_TYPE", "console")
+exporter_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+
 setup_telemetry(
     service_name="optimize-me",
     service_version="0.1.0",
-    exporter_type="console",
+    exporter_type=exporter_type,
+    exporter_endpoint=exporter_endpoint,
+    use_auto_instrumentation=True,  # Use auto-instrumentation (standard pattern)
 )
 
 print("\n" + "=" * 80)
@@ -149,13 +177,36 @@ corr_result = correlation(df_corr)
 print(f"Result: {corr_result}\n")
 
 print("=" * 80)
-print("ALL FUNCTIONS EXECUTED - Check the JSON trace spans above!")
+print("ALL FUNCTIONS EXECUTED")
 print("=" * 80)
-print("\nEach function call above generated a trace span with:")
-print("  - Function name")
-print("  - Execution time (start_time, end_time)")
-print("  - Captured arguments (for gradient_descent: iterations, learning_rate)")
-print("  - Status (OK or ERROR)")
+
+if exporter_type == "console":
+    print("\n✅ Traces printed to console above (JSON format)")
+    print("\nTo view traces in Jaeger UI:")
+    print("  1. Start services: cd src/telemetry && docker-compose up -d")
+    print("  2. Set environment: export OTEL_TRACES_EXPORTER=otlp")
+    print("  3. Run: python examples/run_all_traces.py")
+    print("  4. Open: http://localhost:16686")
+elif exporter_type == "otlp":
+    print(f"\n✅ Traces sent to OTLP endpoint: {exporter_endpoint}")
+    print("\nView traces in Jaeger UI: http://localhost:16686")
+    print("(Make sure docker-compose is running: cd src/telemetry && docker-compose up -d)")
+
+print("\nOpenTelemetry auto-instrumentation automatically captured:")
+print("  - NumPy operations (array operations)")
+print("  - Pandas operations (DataFrame operations)")
+print("  - Function execution times")
 print("  - Service information (service.name, service.version)")
-print("\n")
+print("\nFor more details, see: src/telemetry/README.md")
+
+# Force flush spans to ensure they're exported (especially for console exporter)
+try:
+    from opentelemetry import trace
+    provider = trace.get_tracer_provider()
+    if hasattr(provider, "force_flush"):
+        provider.force_flush()
+except Exception:
+    pass
+
+print()
 

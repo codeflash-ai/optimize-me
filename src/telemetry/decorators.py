@@ -8,7 +8,11 @@ from opentelemetry.trace import Status, StatusCode
 from src.telemetry.config import TelemetryConfig
 
 logger = logging.getLogger(__name__)
-tracer = trace.get_tracer(__name__)
+
+
+def _get_tracer():
+    """Get tracer dynamically to ensure it uses the current TracerProvider."""
+    return trace.get_tracer(__name__)
 
 
 def trace_function(
@@ -26,7 +30,17 @@ def trace_function(
 
         @functools.wraps(f)
         def wrapper(*args, **kwargs) -> Any:
-            with tracer.start_as_current_span(name) as span:
+            # Get tracer dynamically to ensure it uses the current TracerProvider
+            current_tracer = _get_tracer()
+            logger.debug(f"Creating span '{name}' with tracer {current_tracer}")
+            
+            # Check if tracer provider is NoOp
+            provider = trace.get_tracer_provider()
+            if isinstance(provider, trace.NoOpTracerProvider):
+                logger.warning(f"TracerProvider is NoOp - spans for '{name}' will not be recorded")
+            
+            with current_tracer.start_as_current_span(name) as span:
+                logger.debug(f"Span '{name}' created: {span}, is_recording: {span.is_recording() if hasattr(span, 'is_recording') else 'N/A'}")
                 try:
                     if capture_args:
                         import inspect
@@ -52,6 +66,7 @@ def trace_function(
                         span.set_attribute("function.return", return_str)
 
                     span.set_status(Status(StatusCode.OK))
+                    logger.debug(f"Span '{name}' completed successfully")
                     return result
 
                 except Exception as e:

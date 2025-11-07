@@ -90,6 +90,23 @@ Watch as Codeflash:
 7. Shows impressive speedups (up to 90x in some cases!)
 
 
+## 📊 OpenTelemetry Integration
+
+This project uses OpenTelemetry auto-instrumentation (the standard pattern used by large open-source projects) for observability.
+
+**Quick Start:**
+```bash
+# Run with auto-instrumentation (recommended)
+opentelemetry-instrument python examples/run_all_traces.py
+
+# Or use Docker for visualization
+cd src/telemetry && docker-compose up -d  # Start Jaeger
+OTEL_EXPORTER_TYPE=otlp python examples/run_all_traces.py
+# View traces at: http://localhost:16686
+```
+
+For detailed setup instructions, see [src/telemetry/README.md](src/telemetry/README.md).
+
 ## 🤝 Need Help?
 
 Join our [Discord community](https://www.codeflash.ai/discord) for support and to connect with other developers who love fast code.

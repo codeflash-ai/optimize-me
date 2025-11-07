@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  # Jaeger - For visualizing traces (includes built-in OTLP receiver)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI - Open http://localhost:16686
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    # Optional: Add OpenTelemetry Collector for advanced processing
+    # Uncomment the otel-collector service below if needed
+
+  # Optional: OpenTelemetry Collector for advanced processing/routing
+  # Uncomment if you need to process traces before sending to Jaeger
+  # otel-collector:
+  #   image: otel/opentelemetry-collector:latest
+  #   container_name: otel-collector
+  #   command: ["--config=/etc/otelcol/config.yaml"]
+  #   volumes:
+  #     - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+  #   ports:
+  #     - "4317:4317"  # OTLP gRPC receiver
+  #     - "4318:4318"  # OTLP HTTP receiver
+  #   depends_on:
+  #     - jaeger
+
