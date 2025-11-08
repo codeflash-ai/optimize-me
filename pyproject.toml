@@ -18,7 +18,11 @@ test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["black $file"]
 
+[tool.uv.sources]
+codeflash = { path = "../codeflash", editable = true }
+
 [dependency-groups]
 dev = [
+    "codeflash",
     "pytest-asyncio>=1.2.0",
 ]
