@@ -18,7 +18,7 @@ async def retry_with_backoff(func, max_retries=3):
 
 async def fetch_user(user_id: int) -> dict:
     """Simulates fetching a user from a database"""
-    await asyncio.sleep(0.0001)
+    await asyncio.sleep(0.001)
     return {"id": user_id, "name": f"User{user_id}"}
 
 
