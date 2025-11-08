@@ -12,13 +12,13 @@ async def retry_with_backoff(func, max_retries=3):
         except Exception as e:
             last_exception = e
             if attempt < max_retries - 1:
-                time.sleep(0.0001 * attempt)
+                await asyncio.sleep(0.00001 * attempt)
     raise last_exception
 
 
 async def fetch_user(user_id: int) -> dict:
     """Simulates fetching a user from a database"""
-    await asyncio.sleep(0.0001)
+    await asyncio.sleep(0.001)
     return {"id": user_id, "name": f"User{user_id}"}
 
 
