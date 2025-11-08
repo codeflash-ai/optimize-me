@@ -17,3 +17,8 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["black $file"]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.2.0",
+]
