@@ -1,9 +1,14 @@
 from src.telemetry.setup import setup_telemetry
-from src.telemetry.decorators import trace_function, trace_function_with_metrics
+from src.telemetry.auto_instrumentation import (
+    auto_instrument_package,
+    auto_instrument_modules,
+    auto_instrument_current_package,
+)
 
 __all__ = [
     "setup_telemetry",
-    "trace_function",
-    "trace_function_with_metrics",  # Placeholder for metrics implementation (currently behaves like trace_function)
+    "auto_instrument_package",
+    "auto_instrument_modules",
+    "auto_instrument_current_package",
 ]
 

@@ -82,7 +82,7 @@ def setup_telemetry(
     # Handle ProxyTracerProvider (used by opentelemetry-instrument)
     # ProxyTracerProvider doesn't support add_span_processor directly
     # When opentelemetry-instrument is used, we need to create a real TracerProvider
-    # to ensure our decorators work correctly
+    # to ensure auto-instrumentation and span processors work correctly
     if existing_provider is not None and not isinstance(existing_provider, trace.NoOpTracerProvider):
         # Check if it's a ProxyTracerProvider
         provider_type_name = type(existing_provider).__name__
@@ -90,7 +90,7 @@ def setup_telemetry(
             logger.info("Detected ProxyTracerProvider from opentelemetry-instrument")
             logger.info("Creating new TracerProvider to support span processors")
             # Create a new TracerProvider to replace the proxy
-            # This ensures our decorators can create recording spans
+            # This ensures auto-instrumentation can create recording spans
             tracer_provider = TracerProvider(resource=resource)
             trace.set_tracer_provider(tracer_provider)
         elif isinstance(existing_provider, TracerProvider):
@@ -143,8 +143,10 @@ def setup_telemetry(
     # Use BatchSpanProcessor for OTLP and Datadog exporters for better performance
     if exporter_type == "console":
         span_processor = SimpleSpanProcessor(exporter)
+        logger.info("Using SimpleSpanProcessor for immediate console output")
     else:
         span_processor = BatchSpanProcessor(exporter)
+        logger.info("Using BatchSpanProcessor for OTLP/Datadog exporters")
     
     if hasattr(tracer_provider, "add_span_processor"):
         tracer_provider.add_span_processor(span_processor)

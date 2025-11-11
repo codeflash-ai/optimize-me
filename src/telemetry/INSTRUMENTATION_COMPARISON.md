@@ -54,7 +54,7 @@ opentelemetry-instrument python examples/run_all_traces.py
 
 ✅ **Custom application functions:**
 
-- Only if using the `@trace_function` decorator
+- Automatically traced using `auto_instrument_package()` or `auto_instrument_modules()`
 
 ### Example Output:
 
@@ -120,7 +120,7 @@ python examples/run_all_traces.py
 
 ✅ **Custom application functions:**
 
-- Only if using the `@trace_function` decorator
+- Automatically traced using `auto_instrument_package()` or `auto_instrument_modules()`
 
 ### Example Output:
 
@@ -138,15 +138,15 @@ INFO: OpenTelemetry initialized for service: optimize-me v0.1.0
 
 ## Key Differences
 
-| Aspect                    | `opentelemetry-instrument`    | Programmatic Setup             |
-| ------------------------- | ----------------------------- | ------------------------------ |
-| **Instrumentation Scope** | ALL supported libraries (50+) | Only NumPy & Pandas            |
-| **TracerProvider**        | Created automatically         | Created by `setup_telemetry()` |
-| **Setup Location**        | Before script runs            | Inside the script              |
-| **Configuration**         | Environment variables         | Function parameters + env vars |
-| **Custom Functions**      | Requires decorators           | Requires decorators            |
-| **Ease of Use**           | ✅ Zero code changes          | ⚠️ Need to call function       |
-| **Flexibility**           | ⚠️ Less control               | ✅ More control                |
+| Aspect                    | `opentelemetry-instrument`     | Programmatic Setup             |
+| ------------------------- | ------------------------------ | ------------------------------ |
+| **Instrumentation Scope** | ALL supported libraries (50+)  | Only NumPy & Pandas            |
+| **TracerProvider**        | Created automatically          | Created by `setup_telemetry()` |
+| **Setup Location**        | Before script runs             | Inside the script              |
+| **Configuration**         | Environment variables          | Function parameters + env vars |
+| **Custom Functions**      | Auto-instrumentation available | Auto-instrumentation available |
+| **Ease of Use**           | ✅ Zero code changes           | ⚠️ Need to call function       |
+| **Flexibility**           | ⚠️ Less control                | ✅ More control                |
 
 ---
 
@@ -189,9 +189,10 @@ opentelemetry-instrument python examples/run_all_traces.py
 
 ### Use Both (Recommended):
 
-- ✅ `opentelemetry-instrument` for automatic instrumentation
+- ✅ `opentelemetry-instrument` for automatic library instrumentation
+- ✅ `auto_instrument_package()` for automatic custom function instrumentation
 - ✅ `setup_telemetry()` for custom exporter configuration
-- ✅ Best of both worlds!
+- ✅ Best of all worlds! Zero decorators needed!
 
 ---
 
@@ -243,31 +244,104 @@ setup_telemetry() called
 
 ## Example: What Traces Are Generated
 
-### With `opentelemetry-instrument`:
+### With `opentelemetry-instrument` + Auto-Instrumentation:
 
 ```python
+from src.telemetry import setup_telemetry, auto_instrument_package
+
+# Setup OpenTelemetry
+setup_telemetry(service_name="my-service", exporter_type="console")
+
+# Enable auto-instrumentation for custom functions (BEFORE imports!)
+auto_instrument_package('src', exclude_modules=['src.tests'])
+
+# Import modules - functions are automatically traced
+from src.numerical.optimization import gradient_descent
+from src.algorithms.graph import graph_traversal
+
 import numpy as np
 import pandas as pd
 import requests  # Also instrumented!
 
 # All of these generate traces automatically:
-np.array([1, 2, 3])           # ✅ Traced
-pd.DataFrame(...)             # ✅ Traced
-requests.get("http://...")    # ✅ Traced (not with programmatic only!)
+np.array([1, 2, 3])           # ✅ Traced (NumPy)
+pd.DataFrame(...)             # ✅ Traced (Pandas)
+requests.get("http://...")    # ✅ Traced (Requests)
+gradient_descent(...)         # ✅ Traced (auto-instrumented custom function)
+graph_traversal(...)          # ✅ Traced (auto-instrumented custom function)
 ```
 
-### With Programmatic Setup Only:
+### With Programmatic Setup Only + Auto-Instrumentation:
 
 ```python
+from src.telemetry import setup_telemetry, auto_instrument_package
+
+# Setup OpenTelemetry
+setup_telemetry(
+    service_name="my-service",
+    exporter_type="console",
+    use_auto_instrumentation=True
+)
+
+# Enable auto-instrumentation for custom functions
+auto_instrument_package('src', exclude_modules=['src.tests'])
+
+# Import modules
+from src.numerical.optimization import gradient_descent
 import numpy as np
 import pandas as pd
 import requests  # NOT instrumented!
 
 # Only these generate traces:
-np.array([1, 2, 3])           # ✅ Traced
-pd.DataFrame(...)             # ✅ Traced
-requests.get("http://...")    # ❌ NOT traced
+np.array([1, 2, 3])           # ✅ Traced (NumPy)
+pd.DataFrame(...)             # ✅ Traced (Pandas)
+gradient_descent(...)         # ✅ Traced (auto-instrumented custom function)
+requests.get("http://...")    # ❌ NOT traced (Requests not instrumented)
 ```
+
+---
+
+## Auto-Instrumentation for Custom Functions
+
+Both approaches now support **automatic tracing of custom functions** without decorators!
+
+### How It Works:
+
+```python
+from src.telemetry import setup_telemetry, auto_instrument_package
+
+# 1. Setup OpenTelemetry
+setup_telemetry(service_name="my-service", exporter_type="console")
+
+# 2. Enable auto-instrumentation BEFORE importing modules
+auto_instrument_package(
+    'src',  # Package to instrument
+    include_private=False,  # Don't trace private functions
+    exclude_modules=['src.tests', 'src.telemetry']  # Exclude specific modules
+)
+
+# 3. Import modules - functions are automatically wrapped
+from src.numerical.optimization import gradient_descent
+from src.algorithms.graph import graph_traversal
+
+# All functions are now automatically traced - no decorators needed!
+result = gradient_descent(...)  # ✅ Automatically traced
+```
+
+### Benefits:
+
+- ✅ **No decorators required** - Clean code without `@trace_function`
+- ✅ **Automatic coverage** - All functions in specified modules are traced
+- ✅ **Works with both approaches** - Compatible with `opentelemetry-instrument` and programmatic setup
+- ✅ **Easy to configure** - Exclude modules, control private functions, etc.
+
+### Span Naming:
+
+Auto-instrumented functions create spans with names like:
+
+- `src.numerical.optimization.gradient_descent`
+- `src.algorithms.graph.graph_traversal`
+- `src.statistics.descriptive.describe`
 
 ---
 
@@ -275,17 +349,23 @@ requests.get("http://...")    # ❌ NOT traced
 
 **`opentelemetry-instrument`:**
 
-- Instruments everything automatically
-- Zero code changes needed
+- Instruments all supported libraries automatically (50+ libraries)
+- Zero code changes needed for libraries
 - Production-ready
 - Works with `setup_telemetry()` (detects existing setup)
+- Custom functions can be auto-instrumented with `auto_instrument_package()`
 
 **Programmatic Setup:**
 
-- Instruments only NumPy & Pandas
+- Instruments only NumPy & Pandas (or specific libraries)
 - Requires calling `setup_telemetry()`
 - More control, less automation
 - Good for libraries/frameworks
+- Custom functions can be auto-instrumented with `auto_instrument_package()`
 
 **Best Practice:**
-Use `opentelemetry-instrument` + `setup_telemetry()` together for maximum instrumentation with custom configuration.
+
+1. Use `opentelemetry-instrument` for automatic library instrumentation
+2. Use `auto_instrument_package()` for automatic custom function instrumentation
+3. Use `setup_telemetry()` for custom exporter configuration
+4. **Result:** Maximum instrumentation with zero decorators needed!

@@ -203,7 +203,7 @@ class TestTelemetryGeneration:
             TelemetryConfig.enabled = original_enabled
 
     def test_gradient_descent_captures_arguments(self):
-        """Test that gradient_descent decorator captures specified arguments."""
+        """Test that gradient_descent auto-instrumentation captures function metadata."""
         from opentelemetry import trace
         from opentelemetry.sdk.trace import TracerProvider
         
@@ -252,18 +252,22 @@ class TestErrorHandling:
     """Test that errors are properly traced."""
 
     def test_exception_tracing(self):
-        """Test that exceptions are recorded in spans."""
-        from src.telemetry.decorators import trace_function
+        """Test that exceptions are recorded in spans when using auto-instrumentation."""
+        from src.telemetry import auto_instrument_modules
         
-        @trace_function(span_name="test_error_function")
         def failing_function():
             raise ValueError("Test error")
         
         setup_telemetry(exporter_type="console", enabled=True)
         
+        # Auto-instrument the test module to trace the function
+        import sys
+        current_module = sys.modules[__name__]
+        auto_instrument_modules([current_module.__name__])
+        
         with pytest.raises(ValueError, match="Test error"):
             failing_function()
         
         # Function should raise the exception
-        # The decorator should have recorded it in the span
+        # Auto-instrumentation should have recorded it in the span
 

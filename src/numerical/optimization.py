@@ -1,9 +1,6 @@
 import numpy as np
 
-from src.telemetry.decorators import trace_function
 
-
-@trace_function(span_name="gradient_descent", capture_args=["iterations", "learning_rate"])
 def gradient_descent(
     X: np.ndarray, y: np.ndarray, learning_rate: float = 0.01, iterations: int = 1000
 ) -> np.ndarray:

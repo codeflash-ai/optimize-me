@@ -91,17 +91,40 @@ Datadog fully supports OpenTelemetry auto-instrumentation! You can use `opentele
 #### Prerequisites
 
 1. **Start Datadog Agent** (if running locally):
+
+   **Option A: Using Docker Compose (Recommended - Easiest)**
+
    ```bash
-   # Using Docker
+   export DD_API_KEY=your-api-key
+   export DD_SITE=us5.datadoghq.com  # or datadoghq.com, datadoghq.eu, etc.
+   cd src/telemetry
+   docker-compose --profile datadog up -d datadog-agent
+   ```
+
+   **Option B: Using Docker Run (Manual Setup)**
+
+   ```bash
+   # Stop existing dd-agent if running
+   docker stop dd-agent 2>/dev/null || true
+   docker rm dd-agent 2>/dev/null || true
+
+   # Start with OTLP ports exposed (required for opentelemetry-instrument)
    docker run -d --name datadog-agent \
      -p 8126:8126 \
+     -p 4317:4317 \
+     -p 4318:4318 \
      -e DD_API_KEY=your-api-key \
-     -e DD_SITE=datadoghq.com \
+     -e DD_SITE=us5.datadoghq.com \
+     -e DD_APM_ENABLED=true \
+     -e DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT=0.0.0.0:4317 \
+     -e DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=0.0.0.0:4318 \
      -v /var/run/docker.sock:/var/run/docker.sock:ro \
      -v /proc/:/host/proc/:ro \
      -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
      datadog/agent:latest
    ```
+
+   **Important:** The Datadog Agent must expose ports **4317** (OTLP gRPC) and **4318** (OTLP HTTP) for `opentelemetry-instrument` to work. The default Datadog setup uses socket-based communication which won't work with OTLP.
 
 #### Usage
 
@@ -297,10 +320,36 @@ This automatically instruments:
 
 #### Viewing Traces in Datadog
 
-1. Go to **Datadog APM** → **Traces**
-2. Filter by service: `optimize-me` (or your `DD_SERVICE` value)
-3. View trace details, spans, and performance metrics
-4. See auto-instrumented spans from all libraries
+**Important:** Make sure the Datadog Agent is running and has OTLP ports exposed before sending traces!
+
+1. **Verify Datadog Agent is running and receiving traces:**
+
+   ```bash
+   # Check container is running
+   docker ps | grep datadog-agent
+
+   # Check logs for OTLP receiver messages
+   docker logs datadog-agent --tail 50 | grep -i otlp
+   # Should see messages like: "OTLP receiver started" or "Listening on 0.0.0.0:4317"
+
+   # Check for trace reception
+   docker logs datadog-agent --tail 50 | grep -i trace
+   ```
+
+2. **View traces in Datadog:**
+
+   - Go to **Datadog APM** → **Traces** (https://app.datadoghq.com/apm/traces)
+   - Filter by service: `optimize-me` (or your `DD_SERVICE` value)
+   - Traces may take **1-2 minutes** to appear after sending
+   - View trace details, spans, and performance metrics
+   - See auto-instrumented spans from all libraries
+
+3. **Troubleshooting if traces don't appear:**
+   - **Check API key:** Verify `DD_API_KEY` is set correctly in the container
+   - **Check site:** Make sure `DD_SITE` matches your Datadog account (e.g., `us5.datadoghq.com`)
+   - **Check ports:** Verify ports 4317/4318 are exposed: `docker port datadog-agent`
+   - **Check connection:** Test OTLP endpoint: `curl http://localhost:4318/v1/traces` (should return 405 Method Not Allowed, not Connection Refused)
+   - **Check logs:** Look for errors in `docker logs datadog-agent`
 
 ### OTLP Exporter (Production)
 
@@ -470,15 +519,19 @@ provider.add_span_processor(BatchSpanProcessor(datadog_exporter))
 While auto-instrumentation handles libraries, you can still add custom instrumentation for your application code:
 
 ```python
-from src.telemetry.decorators import trace_function
+from src.telemetry import auto_instrument_package
 
-@trace_function(span_name="my_function", capture_args=["param1"])
-def my_function(param1: int, param2: str):
-    # Your code here
-    pass
+# Enable auto-instrumentation BEFORE importing your modules
+auto_instrument_package('src', exclude_modules=['src.tests'])
+
+# Import modules - functions are automatically traced
+from src.my_module import my_function
+
+# Function is automatically traced - no decorator needed!
+my_function(param1=1, param2="test")
 ```
 
-**Note:** For most use cases, auto-instrumentation is sufficient. Custom decorators are only needed for application-specific tracing.
+**Note:** Auto-instrumentation automatically traces all functions in specified modules. No decorators needed!
 
 ## Supported Libraries
 

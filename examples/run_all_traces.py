@@ -29,13 +29,9 @@ import numpy as np
 import pandas as pd
 
 from src.telemetry import setup_telemetry
-from src.numerical.optimization import gradient_descent
-from src.algorithms.graph import graph_traversal, find_node_clusters, PathFinder, calculate_node_betweenness
-from src.algorithms.dynamic_programming import fibonacci, matrix_sum, matrix_chain_order, coin_change, knapsack
-from src.data_processing.dataframe import dataframe_filter, groupby_mean, dataframe_merge
-from src.statistics.descriptive import describe, correlation
+from src.telemetry.auto_instrumentation import auto_instrument_package
 
-# Initialize OpenTelemetry with auto-instrumentation
+# Initialize OpenTelemetry with auto-instrumentation FIRST
 # Uses environment variables if set, otherwise defaults to console exporter
 print("=" * 80)
 print("Initializing OpenTelemetry with auto-instrumentation...")
@@ -51,13 +47,58 @@ if os.getenv("OTEL_LOG_LEVEL", "").upper() == "DEBUG":
 exporter_type = os.getenv("OTEL_TRACES_EXPORTER") or os.getenv("OTEL_EXPORTER_TYPE", "console")
 exporter_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
 
-setup_telemetry(
-    service_name="optimize-me",
-    service_version="0.1.0",
-    exporter_type=exporter_type,
-    exporter_endpoint=exporter_endpoint,
-    use_auto_instrumentation=True,  # Use auto-instrumentation (standard pattern)
+# Detect if running under opentelemetry-instrument
+# opentelemetry-instrument sets up its own TracerProvider, so we shouldn't replace it
+from opentelemetry import trace
+existing_provider = trace.get_tracer_provider()
+is_opentelemetry_instrument = (
+    existing_provider is not None 
+    and not isinstance(existing_provider, trace.NoOpTracerProvider)
+    and type(existing_provider).__name__ in ("ProxyTracerProvider", "TracerProvider")
 )
+
+if is_opentelemetry_instrument:
+    print("Detected opentelemetry-instrument - using existing OpenTelemetry setup")
+    print(f"Exporter: {exporter_type}, Endpoint: {exporter_endpoint}")
+    # Still call setup_telemetry to ensure console exporter is added if needed
+    # setup_telemetry handles ProxyTracerProvider by creating a new TracerProvider
+    # This ensures we have a console exporter configured for immediate output
+    setup_telemetry(
+        service_name="optimize-me",
+        service_version="0.1.0",
+        exporter_type=exporter_type,  # Use console when OTEL_TRACES_EXPORTER=console
+        exporter_endpoint=exporter_endpoint,
+        use_auto_instrumentation=True,
+    )
+    if exporter_type == "console":
+        print("✅ Console exporter configured - traces will appear below")
+else:
+    # Call setup_telemetry to create TracerProvider and configure exporter
+    setup_telemetry(
+        service_name="optimize-me",
+        service_version="0.1.0",
+        exporter_type=exporter_type,
+        exporter_endpoint=exporter_endpoint,
+        use_auto_instrumentation=True,  # Use auto-instrumentation (standard pattern)
+    )
+
+# Auto-instrument all custom functions in src package
+# This automatically traces all functions without requiring decorators
+# IMPORTANT: This must happen BEFORE importing the modules
+print("\nSetting up auto-instrumentation for custom functions...")
+auto_instrument_package(
+    'src',
+    include_private=False,  # Don't instrument private functions (starting with _)
+    exclude_modules=['src.tests', 'src.telemetry']  # Exclude test and telemetry modules
+)
+print("✅ Auto-instrumentation enabled - all functions will be traced automatically")
+
+# NOW import modules - functions will be automatically wrapped
+from src.numerical.optimization import gradient_descent
+from src.algorithms.graph import graph_traversal, find_node_clusters, PathFinder, calculate_node_betweenness
+from src.algorithms.dynamic_programming import fibonacci, matrix_sum, matrix_chain_order, coin_change, knapsack
+from src.data_processing.dataframe import dataframe_filter, groupby_mean, dataframe_merge
+from src.statistics.descriptive import describe, correlation
 
 print("\n" + "=" * 80)
 print("RUNNING ALL INSTRUMENTED FUNCTIONS")
@@ -202,11 +243,15 @@ print("\nFor more details, see: src/telemetry/README.md")
 # Force flush spans to ensure they're exported (especially for console exporter)
 try:
     from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
     provider = trace.get_tracer_provider()
-    if hasattr(provider, "force_flush"):
-        provider.force_flush()
-except Exception:
-    pass
+    if isinstance(provider, TracerProvider):
+        if hasattr(provider, "force_flush"):
+            provider.force_flush(timeout_millis=5000)  # Wait up to 5 seconds
+            print("\n✅ Spans flushed to exporter")
+except Exception as e:
+    if os.getenv("OTEL_LOG_LEVEL", "").upper() == "DEBUG":
+        print(f"\n⚠️ Could not flush spans: {e}")
 
 print()
 
