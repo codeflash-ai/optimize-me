@@ -23,8 +23,6 @@ async def fetch_user(user_id: int) -> dict:
 
 
 async def fetch_all_users(user_ids: list[int]) -> list[dict]:
-    users = []
-    for user_id in user_ids:
-        user = await fetch_user(user_id)
-        users.append(user)
-    return users
+    # Use asyncio.gather to run fetch_user coroutines concurrently
+    coros = [fetch_user(user_id) for user_id in user_ids]
+    return await asyncio.gather(*coros)
