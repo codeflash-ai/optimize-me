@@ -9,9 +9,11 @@ def time_based_cache(expiry_seconds: int) -> Callable:
         cache: dict[str, tuple[Any, float]] = {}
 
         def wrapper(*args, **kwargs) -> Any:
-            key_parts = [repr(arg) for arg in args]
-            key_parts.extend(f"{k}:{repr(v)}" for k, v in sorted(kwargs.items()))
-            key = ":".join(key_parts)
+            # Use args, and sorted tuple of kwargs items as cache key for fast hashing
+            if kwargs:
+                key = (args, tuple(sorted(kwargs.items())))
+            else:
+                key = args
 
             current_time = time.time()
 
