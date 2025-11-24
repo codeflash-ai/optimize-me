@@ -17,3 +17,6 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["black $file"]
+
+[tool.uv.sources]
+codeflash = { path = "../codeflash", editable = true }
