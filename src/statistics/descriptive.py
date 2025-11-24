@@ -5,8 +5,10 @@ import pandas as pd
 
 
 def describe(series: pd.Series) -> dict[str, float]:
-    values = [v for v in series if not pd.isna(v)]
-    n = len(values)
+    arr = series.to_numpy()
+    mask = ~pd.isna(arr)
+    values = arr[mask]
+    n = values.size
     if n == 0:
         return {
             "count": 0,
@@ -18,9 +20,9 @@ def describe(series: pd.Series) -> dict[str, float]:
             "75%": np.nan,
             "max": np.nan,
         }
-    sorted_values = sorted(values)
-    mean = sum(values) / n
-    variance = sum((x - mean) ** 2 for x in values) / n
+    sorted_values = np.sort(values)
+    mean = values.mean()
+    variance = ((values - mean) ** 2).mean()
     std = variance**0.5
 
     def percentile(p):
