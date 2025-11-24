@@ -47,33 +47,37 @@ def correlation(df: pd.DataFrame) -> dict[Tuple[str, str], float]:
     ]
     n_cols = len(numeric_columns)
     result = {}
+
+    # Extract numeric columns as arrays up front for efficient access
+    data = {col: df[col].to_numpy() for col in numeric_columns}
+    isnan = {col: np.isnan(data[col]) for col in numeric_columns}
+
     for i in range(n_cols):
         col_i = numeric_columns[i]
+        arr_i = data[col_i]
+        isnan_i = isnan[col_i]
         for j in range(n_cols):
             col_j = numeric_columns[j]
-            values_i = []
-            values_j = []
-            for k in range(len(df)):
-                if not pd.isna(df.iloc[k][col_i]) and not pd.isna(df.iloc[k][col_j]):
-                    values_i.append(df.iloc[k][col_i])
-                    values_j.append(df.iloc[k][col_j])
-            n = len(values_i)
-            if n == 0:
+            arr_j = data[col_j]
+            isnan_j = isnan[col_j]
+            # Mask for rows where both values are NOT nan
+            valid_mask = ~(isnan_i | isnan_j)
+            if not np.any(valid_mask):
                 result[(col_i, col_j)] = np.nan
                 continue
-            mean_i = sum(values_i) / n
-            mean_j = sum(values_j) / n
-            var_i = sum((x - mean_i) ** 2 for x in values_i) / n
-            var_j = sum((x - mean_j) ** 2 for x in values_j) / n
-            std_i = var_i**0.5
-            std_j = var_j**0.5
-            if std_i == 0 or std_j == 0:
+            x = arr_i[valid_mask]
+            y = arr_j[valid_mask]
+            n = x.shape[0]
+            mean_x = np.sum(x) / n
+            mean_y = np.sum(y) / n
+            var_x = np.sum((x - mean_x) ** 2) / n
+            var_y = np.sum((y - mean_y) ** 2) / n
+            std_x = var_x**0.5
+            std_y = var_y**0.5
+            if std_x == 0 or std_y == 0:
                 result[(col_i, col_j)] = np.nan
                 continue
-            cov = (
-                sum((values_i[k] - mean_i) * (values_j[k] - mean_j) for k in range(n))
-                / n
-            )
-            corr = cov / (std_i * std_j)
+            cov = np.sum((x - mean_x) * (y - mean_y)) / n
+            corr = cov / (std_x * std_y)
             result[(col_i, col_j)] = corr
     return result
