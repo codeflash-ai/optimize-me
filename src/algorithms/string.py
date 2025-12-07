@@ -11,9 +11,11 @@ def string_concat(n):
 
 
 def regex_match(strings: list[str], pattern: str) -> list[str]:
+    # Compile pattern once for better performance when used repeatedly
+    regex = re.compile(pattern)
     matched = []
     for s in strings:
-        if re.match(pattern, s):
+        if regex.match(s):
             matched.append(s)
     return matched
 
