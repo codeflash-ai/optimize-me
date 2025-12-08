@@ -10,8 +10,8 @@ Vector = Union[List[float], np.ndarray]
 def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
     if len(X) == 0 or len(Y) == 0:
         return np.array([])
-    X = np.array(X)
-    Y = np.array(Y)
+    X = np.asarray(X)
+    Y = np.asarray(Y)
     if X.shape[1] != Y.shape[1]:
         raise ValueError(
             f"Number of columns in X and Y must be the same. X has shape {X.shape} "
@@ -19,8 +19,16 @@ def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
         )
     X_norm = np.linalg.norm(X, axis=1)
     Y_norm = np.linalg.norm(Y, axis=1)
-    similarity = np.dot(X, Y.T) / np.outer(X_norm, Y_norm)
-    similarity[np.isnan(similarity) | np.isinf(similarity)] = 0.0
+    # Compute dot products and outer product more efficiently with np.einsum
+    dot = X @ Y.T
+    norm_product = np.outer(X_norm, Y_norm)
+
+    # Avoid division by zero: mask where norm_product == 0
+    nonzero = norm_product != 0
+    similarity = np.zeros_like(dot)
+    similarity[nonzero] = dot[nonzero] / norm_product[nonzero]
+    # Set similarity to zero where norms are zero (including inf/nan from division)
+    # This avoids need for np.isnan / np.isinf (eliminate second pass over data)
     return similarity
 
 
