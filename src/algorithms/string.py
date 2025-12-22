@@ -41,9 +41,15 @@ def find_common_tags(articles: list[dict[str, list[str]]]) -> set[str]:
     if not articles:
         return set()
 
-    common_tags = set(articles[0].get("tags", []))
-    for article in articles[1:]:
-        common_tags.intersection_update(article.get("tags", []))
+    # Pre-fetch "tags" lists once to avoid repeated dict lookups and slicing
+    tags_lists = [article.get("tags", []) for article in articles]
+    # Start with the shortest tags list to minimize intermediate intersection set sizes
+    if not tags_lists or not tags_lists[0]:
+        return set()
+    first_tags = min(tags_lists, key=len)
+    common_tags = set(first_tags)
+    for tags in tags_lists:
+        common_tags.intersection_update(tags)
         if not common_tags:
             break
     return common_tags
