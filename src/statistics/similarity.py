@@ -10,8 +10,8 @@ Vector = Union[List[float], np.ndarray]
 def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
     if len(X) == 0 or len(Y) == 0:
         return np.array([])
-    X = np.array(X)
-    Y = np.array(Y)
+    X = np.asarray(X)
+    Y = np.asarray(Y)
     if X.shape[1] != Y.shape[1]:
         raise ValueError(
             f"Number of columns in X and Y must be the same. X has shape {X.shape} "
@@ -19,8 +19,31 @@ def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
         )
     X_norm = np.linalg.norm(X, axis=1)
     Y_norm = np.linalg.norm(Y, axis=1)
-    similarity = np.dot(X, Y.T) / np.outer(X_norm, Y_norm)
-    similarity[np.isnan(similarity) | np.isinf(similarity)] = 0.0
+
+    # Avoid explicit creation of outer product and broadcasting division,
+    # instead use manual vector-wise normalization to save memory
+    # (normalize X and Y rows before matrix multiplication when feasible)
+    nonzero_X = X_norm != 0
+    nonzero_Y = Y_norm != 0
+    X_safe = X.astype(np.float64, copy=False)
+    Y_safe = Y.astype(np.float64, copy=False)
+    # Precompute normed variants only for valid rows
+    X_normed = np.zeros_like(X_safe, dtype=np.float64)
+    Y_normed = np.zeros_like(Y_safe, dtype=np.float64)
+    X_normed[nonzero_X] = X_safe[nonzero_X] / X_norm[nonzero_X, None]
+    Y_normed[nonzero_Y] = Y_safe[nonzero_Y] / Y_norm[nonzero_Y, None]
+    similarity = np.dot(X_normed, Y_normed.T)
+    # Explicitly set similarities to zero for rows with small norm
+    if not np.all(nonzero_X) or not np.all(nonzero_Y):
+        mask_X = ~nonzero_X
+        mask_Y = ~nonzero_Y
+        if np.any(mask_X):
+            similarity[mask_X, :] = 0.0
+        if np.any(mask_Y):
+            similarity[:, mask_Y] = 0.0
+
+    # Clean up any remaining nan/inf (highly unlikely after this normalization)
+    np.nan_to_num(similarity, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     return similarity
 
 
