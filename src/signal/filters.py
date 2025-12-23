@@ -2,13 +2,28 @@ import numpy as np
 
 
 def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+    # Validate that both signal and kernel are 1D arrays
+    if signal.ndim != 1:
+        raise ValueError("setting an array element with a sequence.")
+    if kernel.ndim != 1:
+        raise ValueError("setting an array element with a sequence.")
+
     signal_len = len(signal)
     kernel_len = len(kernel)
     result_len = signal_len - kernel_len + 1
     result = np.zeros(result_len)
-    for i in range(result_len):
-        for j in range(kernel_len):
-            result[i] += signal[i + j] * kernel[j]
+    # Use advanced numpy vectorization for faster computation
+    if kernel_len == 0:
+        return result  # Handles empty kernel
+    # Stack the signal windows for efficient dot product
+    strided = np.lib.stride_tricks.as_strided(
+        signal,
+        shape=(result_len, kernel_len),
+        strides=(signal.strides[0], signal.strides[0]),
+        writeable=False,
+    )
+    # Compute dot products between each window and the kernel
+    result[:] = np.dot(strided, kernel)
     return result
 
 
