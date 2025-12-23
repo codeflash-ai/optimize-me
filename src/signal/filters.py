@@ -22,25 +22,51 @@ def gaussian_blur(
     height, width = image.shape[:2]
     channels = 1 if len(image.shape) == 2 else image.shape[2]
     output = np.zeros_like(image)
-    for y in range(height):
-        for x in range(width):
-            for c in range(channels):
+
+    if channels == 1:
+        for y0 in range(height):
+            for x0 in range(width):
                 weighted_sum = 0
                 weight_sum = 0
-                for ky in range(-k, k + 1):
-                    for kx in range(-k, k + 1):
-                        ny, nx = y + ky, x + kx
-                        if 0 <= ny < height and 0 <= nx < width:
-                            if channels == 1:
-                                pixel_value = image[ny, nx]
-                            else:
-                                pixel_value = image[ny, nx, c]
-                            weight = kernel[ky + k, kx + k]
+                # Determine the valid kernel range for this pixel
+                ky_start = max(0, k - y0)
+                kx_start = max(0, k - x0)
+                ky_end = min(kernel_size, kernel_size - (y0 + k + 1 - height))
+                kx_end = min(kernel_size, kernel_size - (x0 + k + 1 - width))
+
+                for ky in range(ky_start, ky_end):
+                    for kx in range(kx_start, kx_end):
+                        ny = y0 + ky - k
+                        nx = x0 + kx - k
+                        pixel_value = image[ny, nx]
+                        weight = kernel[ky, kx]
+                        weighted_sum += pixel_value * weight
+                        weight_sum += weight
+
+                if weight_sum > 0:
+                    output[y0, x0] = weighted_sum / weight_sum
+    else:
+        for y0 in range(height):
+            for x0 in range(width):
+                # Determine the valid kernel range for this pixel
+                ky_start = max(0, k - y0)
+                kx_start = max(0, k - x0)
+                ky_end = min(kernel_size, kernel_size - (y0 + k + 1 - height))
+                kx_end = min(kernel_size, kernel_size - (x0 + k + 1 - width))
+
+                for c in range(channels):
+                    weighted_sum = 0
+                    weight_sum = 0
+                    for ky in range(ky_start, ky_end):
+                        for kx in range(kx_start, kx_end):
+                            ny = y0 + ky - k
+                            nx = x0 + kx - k
+                            pixel_value = image[ny, nx, c]
+                            weight = kernel[ky, kx]
                             weighted_sum += pixel_value * weight
                             weight_sum += weight
-                if weight_sum > 0:
-                    if channels == 1:
-                        output[y, x] = weighted_sum / weight_sum
-                    else:
-                        output[y, x, c] = weighted_sum / weight_sum
+
+                    if weight_sum > 0:
+                        output[y0, x0, c] = weighted_sum / weight_sum
+
     return output
