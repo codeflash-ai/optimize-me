@@ -29,16 +29,22 @@ def image_rotation(image: np.ndarray, angle_degrees: float) -> np.ndarray:
 def histogram_equalization(image: np.ndarray) -> np.ndarray:
     height, width = image.shape
     total_pixels = height * width
-    histogram = np.zeros(256, dtype=int)
-    for y in range(height):
-        for x in range(width):
-            histogram[image[y, x]] += 1
+
+    # Use bincount but ensure we only count values 0-255
+    # This maintains the IndexError behavior for out-of-range values
+    image_flat = image.ravel()
+    if image_flat.size > 0 and (image_flat.max() >= 256 or image_flat.min() < 0):
+        # Trigger the same IndexError as original code
+        _ = np.zeros(256, dtype=int)[image_flat.max()]
+
+    histogram = np.bincount(image_flat, minlength=256)[:256]
+
+    # Build CDF exactly as original to match floating-point behavior
     cdf = np.zeros(256, dtype=float)
     cdf[0] = histogram[0] / total_pixels
     for i in range(1, 256):
         cdf[i] = cdf[i - 1] + histogram[i] / total_pixels
-    equalized = np.zeros_like(image)
-    for y in range(height):
-        for x in range(width):
-            equalized[y, x] = np.round(cdf[image[y, x]] * 255)
+
+    mapping = np.round(cdf * 255).astype(image.dtype)
+    equalized = mapping[image]
     return equalized
