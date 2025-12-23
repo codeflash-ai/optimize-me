@@ -6,9 +6,16 @@ def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     kernel_len = len(kernel)
     result_len = signal_len - kernel_len + 1
     result = np.zeros(result_len)
-    for i in range(result_len):
-        for j in range(kernel_len):
-            result[i] += signal[i + j] * kernel[j]
+    # Use vectorized operations for performance
+    # Create a 2D view of the portions of signal for each convolution step
+    if result_len <= 0:
+        return result  # Preserve behavior for empty result
+    strided = np.lib.stride_tricks.as_strided(
+        signal,
+        shape=(result_len, kernel_len),
+        strides=(signal.strides[0], signal.strides[0]),
+    )
+    result[:] = np.dot(strided, kernel)
     return result
 
 
