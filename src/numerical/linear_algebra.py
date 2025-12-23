@@ -8,11 +8,7 @@ def numpy_matmul(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     rows_B, cols_B = B.shape
     if cols_A != rows_B:
         raise ValueError("Incompatible matrices")
-    result = np.zeros((rows_A, cols_B))
-    for i in range(rows_A):
-        for j in range(cols_B):
-            for k in range(cols_A):
-                result[i, j] += A[i, k] * B[k, j]
+    result = np.dot(A, B).astype(np.float64)
     return result
 
 
