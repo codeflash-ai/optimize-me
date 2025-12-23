@@ -19,11 +19,18 @@ def lagrange_interpolation(points: List[Tuple[float, float]], x: float) -> float
     result = 0.0
     n = len(points)
 
+    # Precompute x and y values for faster access
+    x_vals = [pt[0] for pt in points]
+    y_vals = [pt[1] for pt in points]
+
     for i in range(n):
-        term = points[i][1]
+        term = y_vals[i]
+        xi = x_vals[i]
         for j in range(n):
             if i != j:
-                term *= (x - points[j][0]) / (points[i][0] - points[j][0])
+                # Perform division at each step to maintain numerical stability
+                # and preserve the original behavior (raising ZeroDivisionError)
+                term *= (x - x_vals[j]) / (xi - x_vals[j])
         result += term
 
     return result
