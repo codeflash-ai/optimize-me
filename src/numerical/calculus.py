@@ -8,9 +8,10 @@ def numerical_integration_rectangle(
         a, b = b, a
     h = (b - a) / n
     result = 0.0
+    x = a
     for i in range(n):
-        x = a + i * h
         result += f(x)
+        x += h
     return result * h
 
 
