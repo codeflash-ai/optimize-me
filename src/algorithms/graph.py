@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import defaultdict, deque
+
 import networkx as nx
 
 
@@ -155,37 +157,51 @@ def calculate_node_betweenness(
     """Calculate betweenness centrality for each node."""
     betweenness = {node: 0.0 for node in nodes}
 
+    # Build adjacency list once for efficient traversal
+    adjacency: dict[str, list[str]] = defaultdict(list)
+    for edge in edges:
+        adjacency[edge["source"]].append(edge["target"])
+
+    nodes_set = set(nodes)
+
     # For each pair of nodes, find all shortest paths and count paths through each node
     for source in nodes:
+        # BFS to find shortest path lengths and track parent relationships
+        queue = deque([source])
+        level = {node: -1 for node in nodes}
+        level[source] = 0
+        parents = defaultdict(list)
+
+        while queue:
+            current = queue.popleft()
+            for neighbor in adjacency[current]:
+                if neighbor not in nodes_set:
+                    continue
+
+                if level[neighbor] < 0:
+                    level[neighbor] = level[current] + 1
+                    queue.append(neighbor)
+
+                if level[neighbor] == level[current] + 1:
+                    parents[neighbor].append(current)
+
         for target in nodes:
-            if source == target:
+            if target == source or level[target] < 0:
                 continue
 
-            # Find all shortest paths from source to target
+            # Reconstruct all shortest paths from source to target
             all_paths = []
+            stack = [([target], target)]
+            while stack:
+                path, current = stack.pop()
+                if current == source:
+                    all_paths.append(path[::-1])
+                else:
+                    for parent in parents[current]:
+                        stack.append((path + [parent], parent))
 
-            # BFS to find shortest path length
-            queue = [(source, [source])]
-            shortest_length = float("inf")
-
-            while queue:
-                current, path = queue.pop(0)
-
-                # If we've found a path to target
-                if current == target:
-                    all_paths.append(path)
-                    continue
-
-                if len(path) > shortest_length:
-                    continue
-
-                for edge in edges:
-                    if edge["source"] == current and edge["target"] not in path:
-                        new_path = path + [edge["target"]]
-                        queue.append((edge["target"], new_path))
-
-                        if edge["target"] == target:
-                            shortest_length = len(new_path) - 1
+            if not all_paths:
+                continue
 
             # Count how many shortest paths go through each node
             for path in all_paths:
