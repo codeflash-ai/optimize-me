@@ -11,8 +11,7 @@ def numpy_matmul(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     result = np.zeros((rows_A, cols_B))
     for i in range(rows_A):
         for j in range(cols_B):
-            for k in range(cols_A):
-                result[i, j] += A[i, k] * B[k, j]
+            result[i, j] = np.dot(A[i, :], B[:, j])
     return result
 
 
