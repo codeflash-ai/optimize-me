@@ -8,7 +8,7 @@ def fibonacci(n):
 
 
 def matrix_sum(matrix: list[list[int]]) -> list[int]:
-    return [sum(matrix[i]) for i in range(len(matrix)) if sum(matrix[i]) > 0]
+    return [s for row in matrix if (s := sum(row)) > 0]
 
 
 def matrix_chain_order(matrices: list[tuple[int, int]]) -> int:
