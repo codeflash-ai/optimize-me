@@ -7,10 +7,21 @@ def numerical_integration_rectangle(
     if a > b:
         a, b = b, a
     h = (b - a) / n
-    result = 0.0
-    for i in range(n):
-        x = a + i * h
-        result += f(x)
+    try:
+        import numpy as np
+
+        # Generate the x values as a NumPy array
+        xs = a + np.arange(n) * h
+        # Attempt to apply the function to all x at once
+        vals = f(xs)
+        # If f doesn't support vectorization, this will likely raise, so we fallback
+        result = np.sum(vals)
+    except Exception:
+        # Fallback to original loop for non-vectorizable functions
+        result = 0.0
+        for i in range(n):
+            x = a + i * h
+            result += f(x)
     return result * h
 
 
