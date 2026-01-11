@@ -5,10 +5,19 @@ def manual_convolution_1d(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     signal_len = len(signal)
     kernel_len = len(kernel)
     result_len = signal_len - kernel_len + 1
-    result = np.zeros(result_len)
-    for i in range(result_len):
-        for j in range(kernel_len):
-            result[i] += signal[i + j] * kernel[j]
+
+    # Preserve original behavior for negative/zero lengths and empty kernel
+    if result_len < 0:
+        return np.zeros(result_len)
+    if result_len == 0:
+        return np.zeros(0)
+    if kernel_len == 0:
+        return np.zeros(result_len)
+
+    # Use NumPy's optimized correlate to compute the same inner sum efficiently
+    signal = np.asarray(signal)
+    kernel = np.asarray(kernel)
+    result = np.correlate(signal, kernel, mode="valid").astype(np.float64, copy=False)
     return result
 
 
