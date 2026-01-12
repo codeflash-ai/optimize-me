@@ -1,5 +1,3 @@
-"""Test script to check if codeflash can optimize each function in the repo."""
-
 import ast
 import re
 import sqlite3
@@ -456,6 +454,7 @@ def main():
         progress,
         task_id,
         completed_ref: list[int],
+        skipped_ref: list[int],
     ):
         """Run a list of functions on a specific server for given attempts."""
         for attempt in attempts:
@@ -468,6 +467,20 @@ def main():
             for i, (file_path, func_info) in enumerate(functions):
                 func_name = func_info["name"]
                 func_key = (file_path, func_name)
+
+                # Early exit: skip if already succeeded on this server
+                if func_key in func_results and any(
+                    func_results[func_key].get(server, [])
+                ):
+                    console.print(
+                        f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
+                        f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
+                        f"[dim]SKIPPED (already succeeded)[/dim]"
+                    )
+                    skipped_ref[0] += 1
+                    completed_ref[0] += 1
+                    progress.update(task_id, completed=completed_ref[0])
+                    continue
 
                 console.print(
                     f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
@@ -514,6 +527,7 @@ def main():
             "[bold blue]Overall Progress", total=prod_total
         )
         completed = [0]  # Use list for mutability in nested function
+        skipped = [0]
 
         # Phase 1: PROD server (2 attempts for all functions)
         console.print(
@@ -525,7 +539,7 @@ def main():
         )
 
         run_functions_on_server(
-            all_functions, "prod", [1, 2], progress, overall_task, completed
+            all_functions, "prod", [1, 2], progress, overall_task, completed, skipped
         )
 
         # Determine which functions failed on prod (both attempts failed)
@@ -559,7 +573,7 @@ def main():
             progress.update(overall_task, total=new_total)
 
             run_functions_on_server(
-                failed_on_prod, "local", [1, 2], progress, overall_task, completed
+                failed_on_prod, "local", [1, 2], progress, overall_task, completed, skipped
             )
         else:
             console.print(
@@ -579,7 +593,9 @@ def main():
 
     console.print(
         Panel.fit(
-            f"Results saved to: [cyan]{DB_PATH}[/cyan]\nRun ID: [bold]{run_id}[/bold]",
+            f"Results saved to: [cyan]{DB_PATH}[/cyan]\n"
+            f"Run ID: [bold]{run_id}[/bold]\n"
+            f"Skipped (early exit): [yellow]{skipped[0]}[/yellow]",
             title="[green]Test Complete[/green]",
         )
     )
