@@ -458,8 +458,13 @@ def main():
                         f"[dim]SKIPPED (already succeeded)[/dim]"
                     )
                     skipped_ref[0] += 1
-                    completed_ref[0] += 1
-                    progress.update(task_id, completed=completed_ref[0])
+                    # Reduce total instead of incrementing completed (keeps progress accurate)
+                    current_total = progress.tasks[task_id].total or 0
+                    progress.update(
+                        task_id,
+                        total=current_total - 1,
+                        description=f"[bold blue]Progress[/bold blue] [dim](skipped: {skipped_ref[0]})[/dim]",
+                    )
                     continue
 
                 line_count = (func_info.ending_line or func_info.starting_line or 0) - (func_info.starting_line or 0) + 1
@@ -499,7 +504,7 @@ def main():
         TextColumn("[progress.description]{task.description}"),
         BarColumn(),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        TextColumn("({task.completed}/{task.total})"),
+        TextColumn("({task.completed}/{task.total})", style="cyan"),
         console=console,
     ) as progress:
         # Start with prod estimate
