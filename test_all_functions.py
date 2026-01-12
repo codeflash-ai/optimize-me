@@ -192,7 +192,7 @@ def run_codeflash(file_path: str, function: str, server: str) -> dict:
         # Read stdout in real-time
         if process.stdout:
             for line in process.stdout:
-                console.print(f"    [dim]{line.rstrip()}[/dim]")
+                console.print(f"    {line.rstrip()}")
                 stdout_lines.append(line)
 
         # Read any remaining stderr
@@ -200,7 +200,7 @@ def run_codeflash(file_path: str, function: str, server: str) -> dict:
             stderr_lines = process.stderr.readlines()
             for line in stderr_lines:
                 if line.strip():
-                    console.print(f"    [red dim]{line.rstrip()}[/red dim]")
+                    console.print(f"    [red]{line.rstrip()}[/red]")
 
         process.wait(timeout=300)
         exit_code = process.returncode
@@ -423,6 +423,19 @@ def main():
     # Key: (file_path, func_name), Value: {"prod": [bool, bool], "local": [bool, bool]}
     func_results: dict[tuple[str, str], dict[str, list[bool]]] = {}
 
+    # Live stats counters: [optimized, no_optimization, failed]
+    stats = {"optimized": 0, "no_optimization": 0, "failed": 0}
+
+    def update_progress_description(progress, task_id):
+        """Update progress bar with live stats."""
+        desc = (
+            f"[bold blue]Progress[/bold blue] "
+            f"[green]✓{stats['optimized']}[/green] "
+            f"[yellow]―{stats['no_optimization']}[/yellow] "
+            f"[red]✗{stats['failed']}[/red]"
+        )
+        progress.update(task_id, description=desc)
+
     def run_attempt(
         functions: list[tuple[str, FunctionToOptimize]],
         server: str,
@@ -467,18 +480,22 @@ def main():
             result_type = result["result_type"]
 
             if result_type == "optimized":
+                stats["optimized"] += 1
                 console.print(
                     f"  [green]✓ OPTIMIZED[/green] ({result['duration']:.1f}s)"
                 )
             elif result_type == "no_optimization":
+                stats["no_optimization"] += 1
                 console.print(
                     f"  [yellow]― NO OPTIMIZATION[/yellow] ({result['duration']:.1f}s)"
                 )
             elif result["success"]:
+                stats["optimized"] += 1  # Count other successes as optimized
                 console.print(
                     f"  [green]✓ SUCCESS[/green] ({result['duration']:.1f}s)"
                 )
             else:
+                stats["failed"] += 1
                 console.print(
                     f"  [red]✗ FAILED[/red] [{result_type}] ({result['duration']:.1f}s)"
                 )
@@ -488,6 +505,7 @@ def main():
                 progress.update(task_id, total=current_total + 1)
 
             progress.update(task_id, completed=completed_ref[0])
+            update_progress_description(progress, task_id)
 
         return failed
 
@@ -505,7 +523,8 @@ def main():
     ) as progress:
         # Start with just the number of functions (one attempt each)
         overall_task = progress.add_task(
-            "[bold blue]Overall Progress", total=len(all_functions)
+            "[bold blue]Progress[/bold blue] [green]✓0[/green] [yellow]―0[/yellow] [red]✗0[/red]",
+            total=len(all_functions),
         )
         completed = [0]  # Use list for mutability in nested function
 
