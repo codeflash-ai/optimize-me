@@ -22,22 +22,14 @@ def init_db() -> sqlite3.Connection:
     """Initialize the SQLite database with schema."""
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS runs (
-            id TEXT PRIMARY KEY,
-            started_at TEXT NOT NULL,
-            completed_at TEXT,
-            total_functions INTEGER,
-            server_config TEXT,
-            codeflash_version TEXT,
-            python_version TEXT,
-            git_commit TEXT,
-            git_branch TEXT
-        )
-    """)
-    conn.execute("""
         CREATE TABLE IF NOT EXISTS results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             run_id TEXT NOT NULL,
+            run_started_at TEXT NOT NULL,
+            codeflash_version TEXT,
+            python_version TEXT,
+            git_commit TEXT,
+            git_branch TEXT,
             file_path TEXT NOT NULL,
             function_name TEXT NOT NULL,
             function_line_start INTEGER,
@@ -50,8 +42,7 @@ def init_db() -> sqlite3.Connection:
             duration_seconds REAL NOT NULL,
             stdout TEXT,
             stderr TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (run_id) REFERENCES runs(id)
+            created_at TEXT NOT NULL
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_results_run_id ON results(run_id)")
@@ -247,6 +238,8 @@ def run_codeflash(file_path: str, function: str, server: str) -> dict:
 def save_result(
     conn: sqlite3.Connection,
     run_id: str,
+    run_started_at: str,
+    env_info: dict,
     result: dict,
     attempt: int,
     func_info: FunctionToOptimize,
@@ -257,13 +250,20 @@ def save_result(
         line_count = func_info.ending_line - func_info.starting_line + 1
     conn.execute(
         """
-        INSERT INTO results (run_id, file_path, function_name, function_line_start,
-                            function_line_count, server, attempt, success, exit_code,
-                            error_type, duration_seconds, stdout, stderr, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO results (run_id, run_started_at, codeflash_version, python_version,
+                            git_commit, git_branch, file_path, function_name,
+                            function_line_start, function_line_count, server, attempt,
+                            success, exit_code, error_type, duration_seconds,
+                            stdout, stderr, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             run_id,
+            run_started_at,
+            env_info["codeflash_version"],
+            env_info["python_version"],
+            env_info["git_commit"],
+            env_info["git_branch"],
             result["file"],
             result["function"],
             func_info.starting_line,
@@ -381,6 +381,7 @@ def print_summary(conn: sqlite3.Connection, run_id: str):
 def main():
     conn = init_db()
     run_id = str(uuid.uuid4())
+    run_started_at = datetime.now().isoformat()
     src_dir = Path("/Users/krrt7/Desktop/work/optimize-me/src")
 
     # Get environment info
@@ -406,26 +407,6 @@ def main():
 
         for func in func_list:
             all_functions.append((rel_path, func))
-
-    # Create run record
-    conn.execute(
-        """
-        INSERT INTO runs (id, started_at, total_functions, server_config,
-                         codeflash_version, python_version, git_commit, git_branch)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """,
-        (
-            run_id,
-            datetime.now().isoformat(),
-            len(all_functions),
-            "prod:2,local:2(fallback)",
-            env_info["codeflash_version"],
-            env_info["python_version"],
-            env_info["git_commit"],
-            env_info["git_branch"],
-        ),
-    )
-    conn.commit()
 
     # Header
     console.print(
@@ -475,7 +456,7 @@ def main():
                 full_path.write_text(original_file_contents[file_path])
 
             result = run_codeflash(file_path, func_name, server)
-            save_result(conn, run_id, result, attempt, func_info)
+            save_result(conn, run_id, run_started_at, env_info, result, attempt, func_info)
 
             # Track result
             if func_key not in func_results:
@@ -593,13 +574,6 @@ def main():
             console.print(
                 "\n[green]All functions succeeded on PROD - skipping LOCAL phase[/green]"
             )
-
-    # Update run as completed
-    conn.execute(
-        "UPDATE runs SET completed_at = ? WHERE id = ?",
-        (datetime.now().isoformat(), run_id),
-    )
-    conn.commit()
 
     # Print summary
     console.print("\n")
