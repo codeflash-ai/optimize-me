@@ -15,14 +15,29 @@ def image_rotation(image: np.ndarray, angle_degrees: float) -> np.ndarray:
         else (new_height, new_width)
     )
     new_center_y, new_center_x = new_height // 2, new_width // 2
-    for y in range(new_height):
-        for x in range(new_width):
-            offset_y = y - new_center_y
-            offset_x = x - new_center_x
-            original_y = int(offset_y * cos_theta - offset_x * sin_theta + center_y)
-            original_x = int(offset_y * sin_theta + offset_x * cos_theta + center_x)
-            if 0 <= original_y < height and 0 <= original_x < width:
-                rotated[y, x] = image[original_y, original_x]
+
+    if new_height == 0 or new_width == 0:
+        return rotated
+
+    ys = np.arange(new_height, dtype=float)[:, None] - new_center_y
+    xs = np.arange(new_width, dtype=float)[None, :] - new_center_x
+
+    original_yf = ys * cos_theta - xs * sin_theta + center_y
+    original_xf = ys * sin_theta + xs * cos_theta + center_x
+
+    original_y = original_yf.astype(int)
+    original_x = original_xf.astype(int)
+
+    valid_mask = (
+        (original_y >= 0)
+        & (original_y < height)
+        & (original_x >= 0)
+        & (original_x < width)
+    )
+
+    # Single assignment works for both grayscale and color images:
+    rotated[valid_mask] = image[original_y[valid_mask], original_x[valid_mask]]
+
     return rotated
 
 
