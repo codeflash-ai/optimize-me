@@ -1,4 +1,3 @@
-import ast
 import re
 import sqlite3
 import subprocess
@@ -6,6 +5,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from codeflash.discovery.functions_to_optimize import (
+    FunctionToOptimize,
+    get_all_files_and_functions,
+)
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
@@ -158,32 +161,6 @@ def classify_error(stdout: str, stderr: str, exit_code: int | None) -> str:
     return "unknown_error"
 
 
-def get_function_info(filepath: Path) -> list[dict]:
-    """Extract function names with metadata from a Python file."""
-    try:
-        with open(filepath) as f:
-            source = f.read()
-            tree = ast.parse(source)
-    except SyntaxError:
-        return []
-
-    functions = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef):
-            if not node.name.startswith("_"):
-                # Calculate line count
-                end_line = node.end_lineno or node.lineno
-                line_count = end_line - node.lineno + 1
-                functions.append(
-                    {
-                        "name": node.name,
-                        "line_start": node.lineno,
-                        "line_count": line_count,
-                    }
-                )
-    return functions
-
-
 def run_codeflash(file_path: str, function: str, server: str) -> dict:
     """Run codeflash on a specific function and return the result with live output."""
     cmd = [
@@ -265,9 +242,12 @@ def save_result(
     run_id: str,
     result: dict,
     attempt: int,
-    func_info: dict,
+    func_info: FunctionToOptimize,
 ):
     """Save a single result to the database."""
+    line_count = None
+    if func_info.starting_line and func_info.ending_line:
+        line_count = func_info.ending_line - func_info.starting_line + 1
     conn.execute(
         """
         INSERT INTO results (run_id, file_path, function_name, function_line_start,
@@ -279,8 +259,8 @@ def save_result(
             run_id,
             result["file"],
             result["function"],
-            func_info.get("line_start"),
-            func_info.get("line_count"),
+            func_info.starting_line,
+            line_count,
             result["server"],
             attempt,
             1 if result["success"] else 0,
@@ -402,15 +382,15 @@ def main():
     console.print(f"[dim]Python: {env_info['python_version']}[/dim]")
     console.print(f"[dim]Git: {env_info['git_branch']}@{env_info['git_commit']}[/dim]")
 
-    # Collect all functions with metadata
-    all_functions = []
-    for py_file in src_dir.rglob("*.py"):
-        if py_file.name == "__init__.py":
-            continue
-        rel_path = str(py_file.relative_to(src_dir.parent))
-        func_infos = get_function_info(py_file)
-        for func_info in func_infos:
-            all_functions.append((rel_path, func_info))
+    # Collect all functions using codeflash's discovery
+    functions_dict = get_all_files_and_functions(src_dir)
+    all_functions: list[tuple[str, FunctionToOptimize]] = []
+    for file_path, func_list in functions_dict.items():
+        # file_path can be Path or str depending on codeflash version
+        file_path_obj = Path(file_path) if isinstance(file_path, str) else file_path
+        rel_path = str(file_path_obj.relative_to(src_dir.parent))
+        for func in func_list:
+            all_functions.append((rel_path, func))
 
     # Create run record
     conn.execute(
@@ -448,7 +428,7 @@ def main():
     func_results: dict[tuple[str, str], dict[str, list[bool]]] = {}
 
     def run_functions_on_server(
-        functions: list[tuple[str, dict]],
+        functions: list[tuple[str, FunctionToOptimize]],
         server: str,
         attempts: list[int],
         progress,
@@ -465,7 +445,7 @@ def main():
             )
 
             for i, (file_path, func_info) in enumerate(functions):
-                func_name = func_info["name"]
+                func_name = func_info.function_name
                 func_key = (file_path, func_name)
 
                 # Early exit: skip if already succeeded on this server
@@ -482,10 +462,11 @@ def main():
                     progress.update(task_id, completed=completed_ref[0])
                     continue
 
+                line_count = (func_info.ending_line or func_info.starting_line or 0) - (func_info.starting_line or 0) + 1
                 console.print(
                     f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
                     f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
-                    f"[dim](L{func_info['line_start']}, {func_info['line_count']} lines)[/dim]"
+                    f"[dim](L{func_info.starting_line}, {line_count} lines)[/dim]"
                 )
 
                 result = run_codeflash(file_path, func_name, server)
@@ -545,7 +526,7 @@ def main():
         # Determine which functions failed on prod (both attempts failed)
         failed_on_prod = []
         for file_path, func_info in all_functions:
-            func_key = (file_path, func_info["name"])
+            func_key = (file_path, func_info.function_name)
             prod_results = func_results.get(func_key, {}).get("prod", [])
             # If no success in any prod attempt, try local
             if not any(prod_results):
