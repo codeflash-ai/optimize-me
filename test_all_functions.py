@@ -427,77 +427,62 @@ def main():
     # Key: (file_path, func_name), Value: {"prod": [bool, bool], "local": [bool, bool]}
     func_results: dict[tuple[str, str], dict[str, list[bool]]] = {}
 
-    def run_functions_on_server(
+    def run_attempt(
         functions: list[tuple[str, FunctionToOptimize]],
         server: str,
-        attempts: list[int],
+        attempt: int,
         progress,
         task_id,
         completed_ref: list[int],
-        skipped_ref: list[int],
-    ):
-        """Run a list of functions on a specific server for given attempts."""
-        for attempt in attempts:
-            server_color = "green" if server == "prod" else "yellow"
+    ) -> list[tuple[str, FunctionToOptimize]]:
+        """Run one attempt for a list of functions. Returns list of failures."""
+        failed = []
+        server_color = "green" if server == "prod" else "yellow"
+        console.print(
+            f"\n[bold {server_color}]═══ Server={server.upper()}, "
+            f"Attempt={attempt} ═══[/bold {server_color}]"
+        )
+
+        for i, (file_path, func_info) in enumerate(functions):
+            func_name = func_info.function_name
+            func_key = (file_path, func_name)
+
+            line_count = (func_info.ending_line or func_info.starting_line or 0) - (func_info.starting_line or 0) + 1
             console.print(
-                f"\n[bold {server_color}]═══ Server={server.upper()}, "
-                f"Attempt={attempt} ═══[/bold {server_color}]"
+                f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
+                f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
+                f"[dim](L{func_info.starting_line}, {line_count} lines)[/dim]"
             )
 
-            for i, (file_path, func_info) in enumerate(functions):
-                func_name = func_info.function_name
-                func_key = (file_path, func_name)
+            result = run_codeflash(file_path, func_name, server)
+            save_result(conn, run_id, result, attempt, func_info)
 
-                # Early exit: skip if already succeeded on this server
-                if func_key in func_results and any(
-                    func_results[func_key].get(server, [])
-                ):
-                    console.print(
-                        f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
-                        f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
-                        f"[dim]SKIPPED (already succeeded)[/dim]"
-                    )
-                    skipped_ref[0] += 1
-                    # Reduce total instead of incrementing completed (keeps progress accurate)
-                    current_total = progress.tasks[task_id].total or 0
-                    progress.update(
-                        task_id,
-                        total=current_total - 1,
-                        description=f"[bold blue]Progress[/bold blue] [dim](skipped: {skipped_ref[0]})[/dim]",
-                    )
-                    continue
+            # Track result
+            if func_key not in func_results:
+                func_results[func_key] = {"prod": [], "local": []}
+            func_results[func_key][server].append(result["success"])
 
-                line_count = (func_info.ending_line or func_info.starting_line or 0) - (func_info.starting_line or 0) + 1
+            completed_ref[0] += 1
+            if result["success"]:
                 console.print(
-                    f"\n[cyan][{i + 1}/{len(functions)}][/cyan] "
-                    f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
-                    f"[dim](L{func_info.starting_line}, {line_count} lines)[/dim]"
+                    f"  [green]✓ SUCCESS[/green] ({result['duration']:.1f}s)"
                 )
+            else:
+                console.print(
+                    f"  [red]✗ FAILED[/red] [{result['error_type']}] ({result['duration']:.1f}s)"
+                )
+                failed.append((file_path, func_info))
+                # Add retry to total
+                current_total = progress.tasks[task_id].total or 0
+                progress.update(task_id, total=current_total + 1)
 
-                result = run_codeflash(file_path, func_name, server)
-                save_result(conn, run_id, result, attempt, func_info)
+            progress.update(task_id, completed=completed_ref[0])
 
-                # Track result
-                if func_key not in func_results:
-                    func_results[func_key] = {"prod": [], "local": []}
-                func_results[func_key][server].append(result["success"])
+        return failed
 
-                completed_ref[0] += 1
-                if result["success"]:
-                    console.print(
-                        f"  [green]✓ SUCCESS[/green] ({result['duration']:.1f}s)"
-                    )
-                else:
-                    console.print(
-                        f"  [red]✗ FAILED[/red] [{result['error_type']}] ({result['duration']:.1f}s)"
-                    )
-
-                progress.update(task_id, completed=completed_ref[0])
-
-    # Phase 1: Run all functions on prod (2 attempts)
-    # Phase 2: Run failed functions on local (2 attempts)
-    # Estimate total: all functions * 2 (prod) + some fraction for local
-    # We'll update the total dynamically after prod phase
+    # Phase 1: Run all functions on prod (up to 2 attempts)
+    # Phase 2: Run failed functions on local (up to 2 attempts)
+    # Total grows dynamically as failures need retries
 
     with Progress(
         SpinnerColumn(),
@@ -507,15 +492,13 @@ def main():
         TextColumn("({task.completed}/{task.total})", style="cyan"),
         console=console,
     ) as progress:
-        # Start with prod estimate
-        prod_total = len(all_functions) * 2
+        # Start with just the number of functions (one attempt each)
         overall_task = progress.add_task(
-            "[bold blue]Overall Progress", total=prod_total
+            "[bold blue]Overall Progress", total=len(all_functions)
         )
         completed = [0]  # Use list for mutability in nested function
-        skipped = [0]
 
-        # Phase 1: PROD server (2 attempts for all functions)
+        # Phase 1: PROD server
         console.print(
             "\n[bold cyan]══════════════════════════════════════════════════════════[/bold cyan]"
         )
@@ -524,18 +507,24 @@ def main():
             "[bold cyan]══════════════════════════════════════════════════════════[/bold cyan]"
         )
 
-        run_functions_on_server(
-            all_functions, "prod", [1, 2], progress, overall_task, completed, skipped
+        # Attempt 1 on prod
+        failed_prod_1 = run_attempt(
+            all_functions, "prod", 1, progress, overall_task, completed
         )
 
+        # Attempt 2 on prod (only for failures)
+        if failed_prod_1:
+            console.print(
+                f"\n[yellow]Retrying {len(failed_prod_1)} failed functions...[/yellow]"
+            )
+            failed_prod_2 = run_attempt(
+                failed_prod_1, "prod", 2, progress, overall_task, completed
+            )
+        else:
+            failed_prod_2 = []
+
         # Determine which functions failed on prod (both attempts failed)
-        failed_on_prod = []
-        for file_path, func_info in all_functions:
-            func_key = (file_path, func_info.function_name)
-            prod_results = func_results.get(func_key, {}).get("prod", [])
-            # If no success in any prod attempt, try local
-            if not any(prod_results):
-                failed_on_prod.append((file_path, func_info))
+        failed_on_prod = failed_prod_2  # These failed both attempts
 
         console.print(
             f"\n[yellow]Functions that failed on PROD: {len(failed_on_prod)}/{len(all_functions)}[/yellow]"
@@ -553,14 +542,23 @@ def main():
                 "[bold yellow]══════════════════════════════════════════════════════════[/bold yellow]"
             )
 
-            # Update progress total to include local attempts
-            local_total = len(failed_on_prod) * 2
-            new_total = prod_total + local_total
-            progress.update(overall_task, total=new_total)
+            # Add local attempts to total
+            current_total = progress.tasks[overall_task].total or 0
+            progress.update(overall_task, total=current_total + len(failed_on_prod))
 
-            run_functions_on_server(
-                failed_on_prod, "local", [1, 2], progress, overall_task, completed, skipped
+            # Attempt 1 on local
+            failed_local_1 = run_attempt(
+                failed_on_prod, "local", 1, progress, overall_task, completed
             )
+
+            # Attempt 2 on local (only for failures)
+            if failed_local_1:
+                console.print(
+                    f"\n[yellow]Retrying {len(failed_local_1)} failed functions...[/yellow]"
+                )
+                run_attempt(
+                    failed_local_1, "local", 2, progress, overall_task, completed
+                )
         else:
             console.print(
                 "\n[green]All functions succeeded on PROD - skipping LOCAL phase[/green]"
@@ -580,8 +578,7 @@ def main():
     console.print(
         Panel.fit(
             f"Results saved to: [cyan]{DB_PATH}[/cyan]\n"
-            f"Run ID: [bold]{run_id}[/bold]\n"
-            f"Skipped (early exit): [yellow]{skipped[0]}[/yellow]",
+            f"Run ID: [bold]{run_id}[/bold]",
             title="[green]Test Complete[/green]",
         )
     )
