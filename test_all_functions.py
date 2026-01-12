@@ -79,6 +79,7 @@ def run_codeflash(file_path: str, function: str, server: str) -> dict:
         function,
         "--server",
         server,
+        "--no-pr",
     ]
 
     start_time = datetime.now()
