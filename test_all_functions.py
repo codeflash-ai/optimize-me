@@ -123,7 +123,7 @@ def classify_result(stdout: str, stderr: str, exit_code: int | None) -> str:
         return "timeout"
 
     # Check for "no optimization found" - even on exit code 0
-    if re.search(r"No optimizations found|❌ No optimizations found", combined):
+    if "No optimizations found" in combined:
         return "no_optimization"
 
     # Check if optimization was actually applied
