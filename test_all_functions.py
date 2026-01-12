@@ -392,10 +392,18 @@ def main():
     # Collect all functions using codeflash's discovery
     functions_dict = get_all_files_and_functions(src_dir)
     all_functions: list[tuple[str, FunctionToOptimize]] = []
+    original_file_contents: dict[str, str] = {}  # Save original contents for restore
+
     for file_path, func_list in functions_dict.items():
         # file_path can be Path or str depending on codeflash version
         file_path_obj = Path(file_path) if isinstance(file_path, str) else file_path
         rel_path = str(file_path_obj.relative_to(src_dir.parent))
+
+        # Save original file contents
+        if rel_path not in original_file_contents:
+            full_path = src_dir.parent / rel_path
+            original_file_contents[rel_path] = full_path.read_text()
+
         for func in func_list:
             all_functions.append((rel_path, func))
 
@@ -460,6 +468,11 @@ def main():
                 f"[bold]{file_path}[/bold]::[magenta]{func_name}[/magenta] "
                 f"[dim](L{func_info.starting_line}, {line_count} lines)[/dim]"
             )
+
+            # Restore file to original state before optimization
+            if file_path in original_file_contents:
+                full_path = src_dir.parent / file_path
+                full_path.write_text(original_file_contents[file_path])
 
             result = run_codeflash(file_path, func_name, server)
             save_result(conn, run_id, result, attempt, func_info)
