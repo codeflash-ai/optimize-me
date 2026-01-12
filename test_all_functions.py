@@ -124,15 +124,23 @@ def get_environment_info() -> dict:
     return info
 
 
-def classify_error(stdout: str, stderr: str, exit_code: int | None) -> str:
-    """Classify the error type from output."""
+def classify_result(stdout: str, stderr: str, exit_code: int | None) -> str:
+    """Classify the result type from output."""
     combined = stdout + stderr
-
-    if exit_code == 0:
-        return "success"
 
     if "TIMEOUT" in combined:
         return "timeout"
+
+    # Check for "no optimization found" - even on exit code 0
+    if re.search(r"No optimizations found|❌ No optimizations found", combined):
+        return "no_optimization"
+
+    # Check if optimization was actually applied
+    if exit_code == 0:
+        if re.search(r"✅|Optimization applied|successfully optimized", combined, re.IGNORECASE):
+            return "optimized"
+        # Default success without clear optimization signal
+        return "success"
 
     # Check for common error patterns
     error_patterns = [
@@ -150,7 +158,6 @@ def classify_error(stdout: str, stderr: str, exit_code: int | None) -> str:
         (r"RecursionError", "recursion_error"),
         (r"ConnectionError|ConnectionRefused|HTTPError", "connection_error"),
         (r"API.*error|rate.?limit", "api_error"),
-        (r"No optimization found|could not find.*optimization", "no_optimization"),
         (r"Traceback", "exception"),
     ]
 
@@ -206,31 +213,31 @@ def run_codeflash(file_path: str, function: str, server: str) -> dict:
 
         process.wait(timeout=300)
         exit_code = process.returncode
-        success = exit_code == 0
         stdout = "".join(stdout_lines)
         stderr = "".join(stderr_lines)
     except subprocess.TimeoutExpired:
         process.kill()
         exit_code = -1
-        success = False
         stdout = "".join(stdout_lines)
         stderr = "TIMEOUT after 5 minutes"
     except Exception as e:
         exit_code = -2
-        success = False
         stdout = "".join(stdout_lines)
         stderr = str(e)
 
     duration = (datetime.now() - start_time).total_seconds()
-    error_type = classify_error(stdout, stderr, exit_code)
+    result_type = classify_result(stdout, stderr, exit_code)
+
+    # Consider "no_optimization" and "optimized" as successful (no retry needed)
+    is_success = result_type in ("success", "optimized", "no_optimization")
 
     return {
         "file": file_path,
         "function": function,
         "server": server,
-        "success": success,
+        "success": is_success,
         "exit_code": exit_code,
-        "error_type": error_type,
+        "result_type": result_type,
         "duration": duration,
         "stdout": stdout,
         "stderr": stderr,
@@ -265,7 +272,7 @@ def save_result(
             attempt,
             1 if result["success"] else 0,
             result["exit_code"],
-            result["error_type"],
+            result["result_type"],
             result["duration"],
             result["stdout"],
             result["stderr"],
@@ -463,13 +470,23 @@ def main():
             func_results[func_key][server].append(result["success"])
 
             completed_ref[0] += 1
-            if result["success"]:
+            result_type = result["result_type"]
+
+            if result_type == "optimized":
+                console.print(
+                    f"  [green]✓ OPTIMIZED[/green] ({result['duration']:.1f}s)"
+                )
+            elif result_type == "no_optimization":
+                console.print(
+                    f"  [yellow]― NO OPTIMIZATION[/yellow] ({result['duration']:.1f}s)"
+                )
+            elif result["success"]:
                 console.print(
                     f"  [green]✓ SUCCESS[/green] ({result['duration']:.1f}s)"
                 )
             else:
                 console.print(
-                    f"  [red]✗ FAILED[/red] [{result['error_type']}] ({result['duration']:.1f}s)"
+                    f"  [red]✗ FAILED[/red] [{result_type}] ({result['duration']:.1f}s)"
                 )
                 failed.append((file_path, func_info))
                 # Add retry to total
