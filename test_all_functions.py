@@ -443,9 +443,10 @@ def main():
         progress,
         task_id,
         completed_ref: list[int],
-    ) -> list[tuple[str, FunctionToOptimize]]:
-        """Run one attempt for a list of functions. Returns list of failures."""
+    ) -> tuple[list[tuple[str, FunctionToOptimize]], list[tuple[str, FunctionToOptimize]]]:
+        """Run one attempt for a list of functions. Returns (failed, no_optimization)."""
         failed = []
+        no_opt = []
         server_color = "green" if server == "prod" else "yellow"
         console.print(
             f"\n[bold {server_color}]═══ Server={server.upper()}, "
@@ -489,6 +490,7 @@ def main():
                 console.print(
                     f"  [yellow]― NO OPTIMIZATION[/yellow] ({result['duration']:.1f}s)"
                 )
+                no_opt.append((file_path, func_info))
             elif result["success"]:
                 stats["optimized"] += 1  # Count other successes as optimized
                 console.print(
@@ -507,7 +509,7 @@ def main():
             progress.update(task_id, completed=completed_ref[0])
             update_progress_description(progress, task_id)
 
-        return failed
+        return failed, no_opt
 
     # Phase 1: Run all functions on prod (up to 2 attempts)
     # Phase 2: Run failed functions on local (up to 2 attempts)
@@ -538,35 +540,36 @@ def main():
         )
 
         # Attempt 1 on prod
-        failed_prod_1 = run_attempt(
+        failed_prod_1, no_opt_prod_1 = run_attempt(
             all_functions, "prod", 1, progress, overall_task, completed
         )
 
-        # Attempt 2 on prod (only for failures)
+        # Attempt 2 on prod (only for errors, not no_optimization)
         if failed_prod_1:
             console.print(
                 f"\n[yellow]Retrying {len(failed_prod_1)} failed functions...[/yellow]"
             )
-            failed_prod_2 = run_attempt(
+            failed_prod_2, no_opt_prod_2 = run_attempt(
                 failed_prod_1, "prod", 2, progress, overall_task, completed
             )
         else:
-            failed_prod_2 = []
+            failed_prod_2, no_opt_prod_2 = [], []
 
-        # Determine which functions failed on prod (both attempts failed)
-        failed_on_prod = failed_prod_2  # These failed both attempts
+        # Functions to try on local: failures + no_optimization results
+        try_on_local = failed_prod_2 + no_opt_prod_1 + no_opt_prod_2
 
         console.print(
-            f"\n[yellow]Functions that failed on PROD: {len(failed_on_prod)}/{len(all_functions)}[/yellow]"
+            f"\n[yellow]Functions to try on LOCAL: {len(try_on_local)}/{len(all_functions)} "
+            f"({len(failed_prod_2)} failed, {len(no_opt_prod_1) + len(no_opt_prod_2)} no optimization)[/yellow]"
         )
 
-        # Phase 2: LOCAL server (only for functions that failed on prod)
-        if failed_on_prod:
+        # Phase 2: LOCAL server (for failures + no_optimization from prod)
+        if try_on_local:
             console.print(
                 "\n[bold yellow]══════════════════════════════════════════════════════════[/bold yellow]"
             )
             console.print(
-                f"[bold yellow]PHASE 2: Testing {len(failed_on_prod)} failed functions on LOCAL server[/bold yellow]"
+                f"[bold yellow]PHASE 2: Testing {len(try_on_local)} functions on LOCAL server[/bold yellow]"
             )
             console.print(
                 "[bold yellow]══════════════════════════════════════════════════════════[/bold yellow]"
@@ -574,11 +577,11 @@ def main():
 
             # Add local attempts to total
             current_total = progress.tasks[overall_task].total or 0
-            progress.update(overall_task, total=current_total + len(failed_on_prod))
+            progress.update(overall_task, total=current_total + len(try_on_local))
 
             # Attempt 1 on local
-            failed_local_1 = run_attempt(
-                failed_on_prod, "local", 1, progress, overall_task, completed
+            failed_local_1, _ = run_attempt(
+                try_on_local, "local", 1, progress, overall_task, completed
             )
 
             # Attempt 2 on local (only for failures)
@@ -591,7 +594,7 @@ def main():
                 )
         else:
             console.print(
-                "\n[green]All functions succeeded on PROD - skipping LOCAL phase[/green]"
+                "\n[green]All functions optimized on PROD - skipping LOCAL phase[/green]"
             )
 
     # Print summary
