@@ -239,10 +239,12 @@ tests = [
     { name = "black", specifier = ">=25.9.0" },
     { name = "eval-type-backport" },
     { name = "jax", specifier = ">=0.4.30" },
+    { name = "numba", specifier = ">=0.60.0" },
     { name = "numpy", specifier = ">=2.0.2" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pyrsistent", specifier = ">=0.20.0" },
     { name = "scipy", specifier = ">=1.13.1" },
+    { name = "tensorflow", specifier = ">=2.20.0" },
     { name = "torch", specifier = ">=2.8.0" },
     { name = "xarray", specifier = ">=2024.7.0" },
 ]
@@ -700,6 +702,25 @@ wheels = [
 ]
 
 [[package]]
+name = "nuitka"
+version = "4.0rc7"
+source = { editable = "../Nuitka" }
+
+[package.metadata]
+requires-dist = [
+    { name = "imageio", marker = "extra == 'all'" },
+    { name = "imageio", marker = "extra == 'icon-conversion'" },
+    { name = "setuptools", marker = "extra == 'all'", specifier = ">=42" },
+    { name = "setuptools", marker = "extra == 'build-wheel'", specifier = ">=42" },
+    { name = "toml", marker = "extra == 'all'" },
+    { name = "toml", marker = "extra == 'build-wheel'" },
+    { name = "wheel", marker = "extra == 'build-wheel'" },
+    { name = "zstandard", marker = "extra == 'all'", specifier = ">=0.15" },
+    { name = "zstandard", marker = "extra == 'onefile'", specifier = ">=0.15" },
+]
+provides-extras = ["build-wheel", "package", "standalone", "onefile", "app", "icon-conversion", "all"]
+
+[[package]]
 name = "numpy"
 version = "2.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -759,6 +780,7 @@ dependencies = [
     { name = "black" },
     { name = "codeflash" },
     { name = "networkx" },
+    { name = "nuitka" },
     { name = "numpy" },
     { name = "pandas" },
 ]
@@ -768,6 +790,7 @@ requires-dist = [
     { name = "black", specifier = ">=25.9.0" },
     { name = "codeflash", editable = "../codeflash" },
     { name = "networkx", specifier = ">=3.5" },
+    { name = "nuitka", editable = "../Nuitka" },
     { name = "numpy", specifier = ">=2.3.3" },
     { name = "pandas", specifier = ">=2.3.3" },
 ]
