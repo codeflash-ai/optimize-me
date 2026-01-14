@@ -256,3 +256,33 @@ def find_strongly_connected_components(
             sccs.append(component)
 
     return sccs
+
+
+if __name__ == "__main__":
+    # Example usage
+    graph_data = {
+        1: {2: {}, 3: {}},
+        2: {4: {}},
+        3: {4: {}},
+        4: {},
+    }
+    start_node = 1
+    print(
+        "Graph Traversal from node",
+        start_node,
+        ":",
+        graph_traversal(graph_data, start_node),
+    )
+
+    path_finder = PathFinder({"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": []})
+    print("Shortest path from A to D:", path_finder.find_shortest_path("A", "D"))
+    nodes = [{"id": "1"}, {"id": "2"}, {"id": "3"}, {"id": "4"}]
+    edges = [{"source": "1", "target": "2"}, {"source": "2", "target": "3"}]
+    print("Leaf nodes:", find_leaf_nodes(nodes, edges))
+    print("Cycle vertices:", find_cycle_vertices(edges))
+    print(
+        "Node with highest degree:",
+        find_node_with_highest_degree(
+            ["1", "2", "3", "4"], {"1": ["2"], "2": ["3"], "3": ["1"], "4": []}
+        ),
+    )
