@@ -44,6 +44,4 @@ def find_common_tags(articles: list[dict[str, list[str]]]) -> set[str]:
     common_tags = set(articles[0].get("tags", []))
     for article in articles[1:]:
         common_tags.intersection_update(article.get("tags", []))
-        if not common_tags:
-            break
     return common_tags
