@@ -8,9 +8,12 @@ def numerical_integration_rectangle(
         a, b = b, a
     h = (b - a) / n
     result = 0.0
-    for i in range(n):
-        x = a + i * h
-        result += f(x)
+    # Cache the callable and use an incremental x to avoid per-iteration multiplication
+    f_local = f
+    x = a
+    for _ in range(n):
+        result += f_local(x)
+        x += h
     return result * h
 
 
