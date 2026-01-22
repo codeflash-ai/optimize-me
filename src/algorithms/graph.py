@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import networkx as nx
 
 
@@ -47,7 +49,31 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # Preserve single-pass iterator semantics exactly when edges is an iterator
+    if isinstance(edges, Iterator):
+        edge_iter = edges
+        for n in nodes:
+            # Iterate the remaining edges until a matching source is found.
+            found_match = False
+            for e in edge_iter:
+                if e["source"] == n["id"]:
+                    # Found a matching source => this node is not the last; continue with remaining edges
+                    found_match = True
+                    break
+            if not found_match:
+                # No remaining edge had source == n["id"] => this is the last node
+                return n
+        return None
+
+    # Fast path for multi-pass iterables: build a set of sources for O(1) checks
+    sources = {e["source"] for e in edges}
+    if not sources:
+        # Empty edges - return first node without accessing n["id"]
+        return next(iter(nodes), None)
+    for n in nodes:
+        if n["id"] not in sources:
+            return n
+    return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
