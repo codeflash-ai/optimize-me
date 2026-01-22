@@ -19,11 +19,16 @@ def lagrange_interpolation(points: List[Tuple[float, float]], x: float) -> float
     result = 0.0
     n = len(points)
 
+    # Extract coordinates to avoid repeated tuple indexing
+    x_coords = [p[0] for p in points]
+    y_coords = [p[1] for p in points]
+
     for i in range(n):
-        term = points[i][1]
+        term = y_coords[i]
+        xi = x_coords[i]
         for j in range(n):
             if i != j:
-                term *= (x - points[j][0]) / (points[i][0] - points[j][0])
+                term *= (x - x_coords[j]) / (xi - x_coords[j])
         result += term
 
     return result
