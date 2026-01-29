@@ -149,8 +149,7 @@ wheels = [
 
 [[package]]
 name = "codeflash"
-version = "0.17.3"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../codeflash" }
 dependencies = [
     { name = "click" },
     { name = "codeflash-benchmark" },
@@ -173,30 +172,93 @@ dependencies = [
     { name = "pydantic" },
     { name = "pygls" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-timeout" },
     { name = "rich" },
     { name = "sentry-sdk" },
-    { name = "timeout-decorator" },
     { name = "tomlkit" },
     { name = "unidiff" },
-    { name = "unittest-xml-reporting" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/eb/a317472ec4b6f971bc247bbb9c279ce953e4eecddac24978dce7d5753fc8/codeflash-0.17.3.tar.gz", hash = "sha256:94bf6566bca0a1c9611e0c918183ed61c0c31892b8a23be43e0d834be46812d2", size = 214117, upload-time = "2025-10-09T23:06:46.736Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/19/0e352f82f4f443f670777d0efb78f58539664fd4d3c01471321584c1208c/codeflash-0.17.3-py3-none-any.whl", hash = "sha256:d73a223456810198134cc71938d998d6d6b8ea31413fb60009d11d037c95712f", size = 257211, upload-time = "2025-10-09T23:06:54.206Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.0" },
+    { name = "codeflash-benchmark", editable = "../codeflash/codeflash-benchmark" },
+    { name = "coverage", specifier = ">=7.6.4" },
+    { name = "crosshair-tool", specifier = ">=0.0.78" },
+    { name = "dill", specifier = ">=0.3.8" },
+    { name = "filelock" },
+    { name = "gitpython", specifier = ">=3.1.31" },
+    { name = "humanize", specifier = ">=4.0.0" },
+    { name = "inquirer", specifier = ">=3.0.0" },
+    { name = "isort", specifier = ">=5.11.0" },
+    { name = "jedi", specifier = ">=0.19.1" },
+    { name = "junitparser", specifier = ">=3.1.0" },
+    { name = "libcst", specifier = ">=1.0.1" },
+    { name = "line-profiler", specifier = ">=4.2.0" },
+    { name = "lxml", specifier = ">=5.3.0" },
+    { name = "parameterized", specifier = ">=0.9.0" },
+    { name = "platformdirs", specifier = ">=4.3.7" },
+    { name = "posthog", specifier = ">=3.0.0" },
+    { name = "pydantic", specifier = ">=1.10.1" },
+    { name = "pygls", specifier = ">=2.0.0,<3.0.0" },
+    { name = "pytest", specifier = ">=7.0.0" },
+    { name = "pytest-asyncio", specifier = ">=1.2.0" },
+    { name = "pytest-timeout", specifier = ">=2.1.0" },
+    { name = "rich", specifier = ">=13.8.1" },
+    { name = "sentry-sdk", specifier = ">=1.40.6,<3.0.0" },
+    { name = "tomlkit", specifier = ">=0.11.7" },
+    { name = "unidiff", specifier = ">=0.7.4" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipython", specifier = ">=8.12.0" },
+    { name = "lxml-stubs", specifier = ">=0.5.1" },
+    { name = "mypy", specifier = ">=1.13" },
+    { name = "pandas-stubs", specifier = ">=2.2.2.240807,<2.2.3.241009" },
+    { name = "pre-commit", specifier = ">=4.2.0,<5" },
+    { name = "ruff", specifier = ">=0.7.0" },
+    { name = "types-cffi", specifier = ">=1.16.0.20240331" },
+    { name = "types-colorama", specifier = ">=0.4.15.20240311" },
+    { name = "types-decorator", specifier = ">=5.1.8.20240310" },
+    { name = "types-gevent", specifier = ">=24.11.0.20241230,<25" },
+    { name = "types-greenlet", specifier = ">=3.1.0.20241221,<4" },
+    { name = "types-jsonschema", specifier = ">=4.23.0.20240813" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20241020" },
+    { name = "types-pexpect", specifier = ">=4.9.0.20241208,<5" },
+    { name = "types-pygments", specifier = ">=2.18.0.20240506" },
+    { name = "types-python-dateutil", specifier = ">=2.9.0.20241003" },
+    { name = "types-regex", specifier = ">=2024.9.11.20240912" },
+    { name = "types-requests", specifier = ">=2.32.0.20241016" },
+    { name = "types-six", specifier = ">=1.16.21.20241009" },
+    { name = "types-unidiff", specifier = ">=0.7.0.20240505,<0.8" },
+    { name = "uv", specifier = ">=0.6.2" },
+]
+tests = [
+    { name = "black", specifier = ">=25.9.0" },
+    { name = "eval-type-backport" },
+    { name = "jax", specifier = ">=0.4.30" },
+    { name = "numba", specifier = ">=0.60.0" },
+    { name = "numpy", specifier = ">=2.0.2" },
+    { name = "pandas", specifier = ">=2.3.3" },
+    { name = "pyrsistent", specifier = ">=0.20.0" },
+    { name = "scipy", specifier = ">=1.13.1" },
+    { name = "tensorflow", specifier = ">=2.20.0" },
+    { name = "torch", specifier = ">=2.8.0" },
+    { name = "xarray", specifier = ">=2024.7.0" },
 ]
 
 [[package]]
 name = "codeflash-benchmark"
 version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../codeflash/codeflash-benchmark" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/54/d90d90bb679df915fe6225d350cd6b8ffdd761458f037655e5b949aee928/codeflash_benchmark-0.2.0.tar.gz", hash = "sha256:05ffbc948c9e3896b15d57aee18dec96f2db6159157b63aa109973c4d41c0595", size = 2794, upload-time = "2025-08-07T22:46:57.081Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/83/b8ed6cbdedc79425b1fa33f06077c694d1d377fe185fda07a1bd33acbc68/codeflash_benchmark-0.2.0-py3-none-any.whl", hash = "sha256:996e8bf79e6ab6e3c6b5dacd7370a4414d37bea085b69c691bb3c5e07c879c39", size = 3364, upload-time = "2025-08-07T22:46:58.028Z" },
-]
+
+[package.metadata]
+requires-dist = [{ name = "pytest", specifier = ">=7.0.0,!=8.3.4" }]
 
 [[package]]
 name = "colorama"
@@ -527,15 +589,15 @@ wheels = [
 
 [[package]]
 name = "lsprotocol"
-version = "2023.0.1"
+version = "2025.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "cattrs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/f6/6e80484ec078d0b50699ceb1833597b792a6c695f90c645fbaf54b947e6f/lsprotocol-2023.0.1.tar.gz", hash = "sha256:cc5c15130d2403c18b734304339e51242d3018a05c4f7d0f198ad6e0cd21861d", size = 69434, upload-time = "2024-01-09T17:21:12.625Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e9/26/67b84e6ec1402f0e6764ef3d2a0aaf9a79522cc1d37738f4e5bb0b21521a/lsprotocol-2025.0.0.tar.gz", hash = "sha256:e879da2b9301e82cfc3e60d805630487ac2f7ab17492f4f5ba5aaba94fe56c29", size = 74896, upload-time = "2025-06-17T21:30:18.156Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/37/2351e48cb3309673492d3a8c59d407b75fb6630e560eb27ecd4da03adc9a/lsprotocol-2023.0.1-py3-none-any.whl", hash = "sha256:c75223c9e4af2f24272b14c6375787438279369236cd568f596d4951052a60f2", size = 70826, upload-time = "2024-01-09T17:21:14.491Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/f0/92f2d609d6642b5f30cb50a885d2bf1483301c69d5786286500d15651ef2/lsprotocol-2025.0.0-py3-none-any.whl", hash = "sha256:f9d78f25221f2a60eaa4a96d3b4ffae011b107537facee61d3da3313880995c7", size = 76250, upload-time = "2025-06-17T21:30:19.455Z" },
 ]
 
 [[package]]
@@ -706,7 +768,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "black", specifier = ">=25.9.0" },
-    { name = "codeflash", specifier = ">=0.17.3" },
+    { name = "codeflash", editable = "../codeflash" },
     { name = "networkx", specifier = ">=3.5" },
     { name = "numpy", specifier = ">=2.3.3" },
     { name = "pandas", specifier = ">=2.3.3" },
@@ -889,15 +951,16 @@ wheels = [
 
 [[package]]
 name = "pygls"
-version = "1.3.1"
+version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "attrs" },
     { name = "cattrs" },
     { name = "lsprotocol" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/86/b9/41d173dad9eaa9db9c785a85671fc3d68961f08d67706dc2e79011e10b5c/pygls-1.3.1.tar.gz", hash = "sha256:140edceefa0da0e9b3c533547c892a42a7d2fd9217ae848c330c53d266a55018", size = 45527, upload-time = "2024-03-26T18:44:25.679Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/94/cce3560f6c7296be43bd67ba342f8972b8adddfe407b62b25d1fb90c514b/pygls-2.0.1.tar.gz", hash = "sha256:2f774a669fbe2ece977d302786f01f9b0c5df7d0204ea0fa371ecb08288d6b86", size = 55796, upload-time = "2026-01-26T23:04:33.8Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/11/19/b74a10dd24548e96e8c80226cbacb28b021bc3a168a7d2709fb0d0185348/pygls-1.3.1-py3-none-any.whl", hash = "sha256:6e00f11efc56321bdeb6eac04f6d86131f654c7d49124344a9ebb968da3dd91e", size = 56031, upload-time = "2024-03-26T18:44:24.249Z" },
+    { url = "https://files.pythonhosted.org/packages/48/8b/d0d7e51f928ec6e555c943f7c07a712b992e9cf061d52cbf37fbf8622c05/pygls-2.0.1-py3-none-any.whl", hash = "sha256:d29748042cea5bedc98285eb3e2c0c60bf3fc73786319519001bf72bbe8f36cc", size = 69536, upload-time = "2026-01-26T23:04:35.197Z" },
 ]
 
 [[package]]
@@ -923,6 +986,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
+]
+
+[[package]]
+name = "pytest-asyncio"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/2c/8af215c0f776415f3590cac4f9086ccefd6fd463befeae41cd4d3f193e5a/pytest_asyncio-1.3.0.tar.gz", hash = "sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5", size = 50087, upload-time = "2025-11-10T16:07:47.256Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/35/f8b19922b6a25bc0880171a2f1a003eaeb93657475193ab516fd87cac9da/pytest_asyncio-1.3.0-py3-none-any.whl", hash = "sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5", size = 15075, upload-time = "2025-11-10T16:07:45.537Z" },
 ]
 
 [[package]]
@@ -1072,12 +1147,6 @@ wheels = [
 ]
 
 [[package]]
-name = "timeout-decorator"
-version = "0.5.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/80/f8/0802dd14c58b5d3d72bb9caa4315535f58787a1dc50b81bbbcaaa15451be/timeout-decorator-0.5.0.tar.gz", hash = "sha256:6a2f2f58db1c5b24a2cc79de6345760377ad8bdc13813f5265f6c3e63d16b3d7", size = 4754, upload-time = "2020-11-15T00:53:06.506Z" }
-
-[[package]]
 name = "tomlkit"
 version = "0.13.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1149,18 +1218,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a3/48/81be0ac96e423a877754153699731ef439fd7b80b4c8b5425c94ed079ebd/unidiff-0.7.5.tar.gz", hash = "sha256:2e5f0162052248946b9f0970a40e9e124236bf86c82b70821143a6fc1dea2574", size = 20931, upload-time = "2023-03-10T01:05:39.185Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/54/57c411a6e8f7bd7848c8b66e4dcaffa586bf4c02e63f2280db0327a4e6eb/unidiff-0.7.5-py2.py3-none-any.whl", hash = "sha256:c93bf2265cc1ba2a520e415ab05da587370bc2a3ae9e0414329f54f0c2fc09e8", size = 14386, upload-time = "2023-03-10T01:05:36.594Z" },
-]
-
-[[package]]
-name = "unittest-xml-reporting"
-version = "3.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/40/3bf1afc96e93c7322520981ac4593cbb29daa21b48d32746f05ab5563dca/unittest-xml-reporting-3.2.0.tar.gz", hash = "sha256:edd8d3170b40c3a81b8cf910f46c6a304ae2847ec01036d02e9c0f9b85762d28", size = 18002, upload-time = "2022-01-20T19:09:55.76Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/88/f6e9b87428584a3c62cac768185c438ca6d561367a5d267b293259d76075/unittest_xml_reporting-3.2.0-py2.py3-none-any.whl", hash = "sha256:f3d7402e5b3ac72a5ee3149278339db1a8f932ee405f48bcb9c681372f2717d5", size = 20936, upload-time = "2022-01-20T19:09:53.824Z" },
 ]
 
 [[package]]
