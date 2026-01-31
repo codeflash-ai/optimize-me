@@ -47,6 +47,11 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
+    if isinstance(edges, (list, tuple, set, frozenset)):
+        sources = {e["source"] for e in edges}
+        if not sources:
+            return next((n for n in nodes), None)
+        return next((n for n in nodes if n["id"] not in sources), None)
     return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
 
 
