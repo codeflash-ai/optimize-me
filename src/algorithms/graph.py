@@ -47,7 +47,49 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # Detect if edges is a non-reiterable iterator (iter(edges) is edges).
+    # If so, we must preserve original consumption semantics and fall back.
+    try:
+        edges_iter = iter(edges)
+    except TypeError:
+        # Will raise the same error as the original implementation when evaluated.
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    if edges_iter is edges:
+        # edges is an iterator that would be consumed by the generator expression;
+        # preserve original behavior.
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    # edges is re-iterable: safe to precompute source values for O(N+M) behavior.
+    try:
+        sources = {e["source"] for e in edges}
+    except TypeError:
+        # If sources are unhashable, fall back to original behavior to preserve semantics.
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    for n in nodes:
+        try:
+            node_id = n["id"]
+        except (TypeError, KeyError):
+            # Preserve original semantics: if we can't access n["id"],
+            # the original would also fail when/if it tries to access it.
+            # However, original uses lazy evaluation with all(), so it may never
+            # reach this point if edges is empty. We need to mimic that behavior.
+            # If sources is empty, all() returns True without evaluating n["id"],
+            # so we would return n. Otherwise, we'd evaluate n["id"] and fail.
+            if not sources:
+                return n
+            raise
+
+        if node_id not in sources:
+            return n
+    return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
