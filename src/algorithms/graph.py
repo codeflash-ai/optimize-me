@@ -47,7 +47,23 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    try:
+        sources = {e["source"] for e in edges}
+    except TypeError:
+        # If any source is unhashable, fall back to original behavior to preserve exceptions/semantics
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    # Use a generator with try-except to match original lazy evaluation behavior
+    def is_last_node(n):
+        try:
+            return n["id"] not in sources
+        except (KeyError, TypeError):
+            # Fall back to original check for this node to preserve exception behavior
+            return all(e["source"] != n["id"] for e in edges)
+
+    return next((n for n in nodes if is_last_node(n)), None)
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
