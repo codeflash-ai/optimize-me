@@ -46,8 +46,66 @@ class PathFinder:
 
 
 def find_last_node(nodes, edges):
-    """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    """Find the terminal (sink) node in a directed flow graph.
+
+    A sink node is one with zero outgoing edges — it only receives connections
+    and never acts as a source. In a DAG representing a pipeline or workflow,
+    this is the final step.
+
+    The function iterates through ``nodes`` in order and checks each node's
+    ``"id"`` against every edge's ``"source"`` field. The first node whose id
+    does not match any edge source is returned immediately (short-circuit).
+
+    Parameters
+    ----------
+    nodes : list[dict]
+        Each dict must contain an ``"id"`` key that uniquely identifies the node.
+    edges : list[dict]
+        Each dict must contain a ``"source"`` key indicating the origin node id
+        of that directed edge.
+
+    Returns
+    -------
+    dict or None
+        The first sink node found, or ``None`` if every node has at least one
+        outgoing edge (e.g. the graph contains a cycle with no exit point).
+
+    Notes
+    -----
+    - Only the *first* sink encountered (in ``nodes`` iteration order) is
+      returned. Use ``find_leaf_nodes`` to collect *all* sinks.
+    - The check is O(|nodes| * |edges|) because it scans edges for each node.
+
+    Examples
+    --------
+    >>> nodes = [{"id": "a"}, {"id": "b"}, {"id": "c"}]
+    >>> edges = [{"source": "a", "target": "b"}, {"source": "b", "target": "c"}]
+    >>> find_last_node(nodes, edges)
+    {'id': 'c'}
+
+    A graph where every node has an outgoing edge (cycle) returns ``None``:
+
+    >>> edges_cycle = [
+    ...     {"source": "a", "target": "b"},
+    ...     {"source": "b", "target": "c"},
+    ...     {"source": "c", "target": "a"},
+    ... ]
+    >>> find_last_node(nodes, edges_cycle) is None
+    True
+    """
+    # Try to pre-compute set of all source node IDs for O(1) lookup
+    # If any source ID is unhashable, fall back to original O(n*m) algorithm
+    try:
+        source_ids = {e["source"] for e in edges}
+        # Find first node whose ID is not in the source set (i.e., has no outgoing edges)
+        # This will raise TypeError if n is not a dict when accessing n["id"]
+        return next((n for n in nodes if n["id"] not in source_ids), None)
+    except TypeError:
+        # Fall back to original implementation for unhashable types or non-dict nodes
+        # This preserves the original behavior where TypeError is raised during iteration
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
