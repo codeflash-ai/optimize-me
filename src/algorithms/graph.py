@@ -47,7 +47,9 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # Precompute sources for O(1) membership tests instead of scanning edges for each node.
+    sources = {e["source"] for e in edges}
+    return next((n for n in nodes if n.get("id") not in sources), None)
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
