@@ -1,3 +1,7 @@
+from functools import cache
+
+
+@cache
 def binomial_coefficient(n: int, k: int) -> int:
     if k == 0 or k == n:
         return 1
