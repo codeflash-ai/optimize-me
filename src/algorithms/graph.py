@@ -46,8 +46,49 @@ class PathFinder:
 
 
 def find_last_node(nodes, edges):
-    """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    """Find the last node in a flow (the node with no outgoing edges).
+
+    Iterates through nodes and returns the first one whose "id" does not appear
+    as the "source" of any edge, meaning it has no outgoing connections and is
+    therefore a terminal/sink node in the directed graph. Returns None if every
+    node has at least one outgoing edge (e.g. a fully cyclic graph).
+
+    Note: if there are multiple sink nodes, only the first one encountered in
+    the iteration order of `nodes` is returned. Use `find_leaf_nodes` to get all
+    of them.
+    """
+    # If `edges` is a multi-pass iterable (like a list/tuple), it's much faster
+    # to build a set of all sources and do O(1) membership checks per node.
+    # If `edges` is a single-pass iterator, preserve the original consumption
+    # semantics by streaming it and checking nodes against remaining edges.
+    e_iter = iter(edges)
+    if e_iter is edges:
+        # Single-pass iterator: consume edges as we check nodes, preserving
+        # original behavior (edges remain advanced between node checks).
+        for n in nodes:
+            # For this node, iterate remaining edges until either a matching
+            # source is found (then this node is not a sink) or the iterator
+            # is exhausted (then this node is a sink).
+            has_outgoing = False
+            for e in e_iter:
+                if e["source"] == n["id"]:
+                    # Found an outgoing edge for this node; move to next node.
+                    has_outgoing = True
+                    break
+            if not has_outgoing:
+                # No remaining edge had source == n["id"], so n is a sink.
+                return n
+        return None
+    else:
+        # Multi-pass iterable: collect all sources once and test membership.
+        sources = {e["source"] for e in edges}
+        # If there are no edges, return the first node without checking 'id'
+        if not sources:
+            return next(iter(nodes), None)
+        for n in nodes:
+            if n["id"] not in sources:
+                return n
+        return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
