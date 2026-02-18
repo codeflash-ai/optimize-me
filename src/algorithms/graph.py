@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import networkx as nx
-
 
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
     visited = []
@@ -63,19 +61,6 @@ def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
             leaf_nodes.append(node)
     return leaf_nodes
 
-
-def find_cycle_vertices(edges):
-    """Find all vertices that are part of cycles in the graph."""
-    # Create a directed graph from the edges
-    graph = nx.DiGraph(edges)
-
-    # Find all simple cycles in the graph
-    cycles = list(nx.simple_cycles(graph))
-
-    # Flatten the list of cycles and remove duplicates
-    cycle_vertices = {vertex for cycle in cycles for vertex in cycle}
-
-    return sorted(cycle_vertices)
 
 
 def find_node_with_highest_degree(

@@ -5,9 +5,6 @@ requires-python = ">=3.13"
 dependencies = [
     "black>=25.9.0",
     "codeflash>=0.17.3",
-    "networkx>=3.5",
-    "numpy>=2.3.3",
-    "pandas>=2.3.3",
 ]
 
 [tool.codeflash]
