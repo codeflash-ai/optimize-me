@@ -5,7 +5,16 @@ requires-python = ">=3.13"
 dependencies = [
     "black>=25.9.0",
     "codeflash>=0.17.3",
+    "pydantic-core>=2.41.5",
+    "libcst>=1.8.6",
 ]
+
+[tool.uv.sources]
+pydantic-core = { git = "https://github.com/pydantic/pydantic", subdirectory = "pydantic-core", branch = "main" }
+libcst = { git = "https://github.com/Instagram/LibCST", branch = "main" }
+
+[tool.uv]
+extra-build-variables = { libcst = { PYO3_USE_ABI3_FORWARD_COMPATIBILITY = "1" } }
 
 [tool.codeflash]
 # All paths are relative to this pyproject.toml's directory.

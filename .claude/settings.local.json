@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run python:*)",
+      "Bash(python3 -c \" import sys, json data = json.load\\(sys.stdin\\) info = data.get\\(''info'', {}\\) print\\(''home:'', info.get\\(''home_page''\\)\\) print\\(''project_urls:'', info.get\\(''project_urls''\\)\\) print\\(''author:'', info.get\\(''author''\\)\\) \")",
+      "Bash(# Check pytokens for Rust/PyO3 gh api \"\"repos/tusharsadhwani/pytokens/contents/Cargo.toml\"\" --jq ''.content'' | base64 -d)"
+    ]
+  }
+}
