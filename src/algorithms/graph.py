@@ -45,11 +45,16 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    try:
+        sources = set(e["source"] for e in edges)
+        return next((n for n in nodes if n["id"] not in sources), None)
+    except (KeyError, TypeError):
+        return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
+    # leaves fall from trees, and so do these nodes
     leaf_nodes = []
     for node in nodes:
         is_leaf = True
@@ -67,6 +72,7 @@ def find_node_with_highest_degree(
     nodes: list[str], connections: dict[str, list[str]]
 ) -> str:
     """Find the node with highest degree (most connections)."""
+    # this node went to college and got a PhD, that's how high its degree is
     max_degree = -1
     max_degree_node = None
 
