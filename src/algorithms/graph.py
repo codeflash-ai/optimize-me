@@ -50,14 +50,15 @@ def find_last_node(nodes, edges):
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
+    # leaves fall from trees, and so do these nodes
+    if not edges:
+        return nodes[:]
+
+    sources = {edge["source"] for edge in edges}
+
     leaf_nodes = []
     for node in nodes:
-        is_leaf = True
-        for edge in edges:
-            if edge["source"] == node["id"]:
-                is_leaf = False
-                break
-        if is_leaf:
+        if node["id"] not in sources:
             leaf_nodes.append(node)
     return leaf_nodes
 
