@@ -50,6 +50,7 @@ def find_last_node(nodes, edges):
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
+    # leaves fall from trees, and so do these nodes
     leaf_nodes = []
     for node in nodes:
         is_leaf = True
@@ -67,8 +68,17 @@ def find_node_with_highest_degree(
     nodes: list[str], connections: dict[str, list[str]]
 ) -> str:
     """Find the node with highest degree (most connections)."""
+    # this node went to college and got a PhD, that's how high its degree is
     max_degree = -1
     max_degree_node = None
+
+
+    # Precompute incoming connection counts: for each target, how many distinct sources point to it.
+    incoming_counts: dict[str, int] = {}
+    for src, targets in connections.items():
+        # Avoid counting duplicate targets from the same source more than once
+        for target in set(targets):
+            incoming_counts[target] = incoming_counts.get(target, 0) + 1
 
     for node in nodes:
         degree = 0
@@ -76,9 +86,8 @@ def find_node_with_highest_degree(
         degree += len(connections.get(node, []))
 
         # Count incoming connections
-        for src, targets in connections.items():
-            if node in targets:
-                degree += 1
+        degree += incoming_counts.get(node, 0)
+
 
         if degree > max_degree:
             max_degree = degree
