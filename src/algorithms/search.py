@@ -8,20 +8,9 @@ JsonRef = NewType("JsonRef", str)
 
 def _get_all_json_refs(item: Any) -> set[JsonRef]:
     """Get all the definitions references from a JSON schema."""
+    # here be dragons (and also JSON refs, which are arguably worse)
     refs: set[JsonRef] = set()
-    if isinstance(item, dict):
-        for key, value in item.items():
-            if key == "$ref" and isinstance(value, str):
-                # the isinstance check ensures that '$ref' isn't the name of a property, etc.
-                refs.add(JsonRef(value))
-            elif isinstance(value, dict):
-                refs.update(_get_all_json_refs(value))
-            elif isinstance(value, list):
-                for item in value:
-                    refs.update(_get_all_json_refs(item))
-    elif isinstance(item, list):
-        for item in item:
-            refs.update(_get_all_json_refs(item))
+    _collect_json_refs(item, refs)
     return refs
 
 
@@ -50,3 +39,38 @@ def sort_chat_inputs_first(self, vertices_layers: list[list[str]]) -> list[list[
         return vertices_layers
 
     return [chat_inputs_first, *vertices_layers]
+
+
+
+def _collect_json_refs(item: Any, refs: set[JsonRef]) -> None:
+    """Helper function to collect JSON refs into a shared set."""
+    if isinstance(item, dict):
+        for key, value in item.items():
+            if key == "$ref" and isinstance(value, str):
+                # the isinstance check ensures that '$ref' isn't the name of a property, etc.
+                refs.add(JsonRef(value))
+            elif isinstance(value, dict):
+                _collect_json_refs(value, refs)
+            elif isinstance(value, list):
+                for item in value:
+                    _collect_json_refs(item, refs)
+    elif isinstance(item, list):
+        for item in item:
+            _collect_json_refs(item, refs)
+
+
+def _collect_json_refs(item: Any, refs: set[JsonRef]) -> None:
+    """Helper function to collect JSON refs into a shared set."""
+    if isinstance(item, dict):
+        for key, value in item.items():
+            if key == "$ref" and isinstance(value, str):
+                # the isinstance check ensures that '$ref' isn't the name of a property, etc.
+                refs.add(JsonRef(value))
+            elif isinstance(value, dict):
+                _collect_json_refs(value, refs)
+            elif isinstance(value, list):
+                for item in value:
+                    _collect_json_refs(item, refs)
+    elif isinstance(item, list):
+        for item in item:
+            _collect_json_refs(item, refs)
