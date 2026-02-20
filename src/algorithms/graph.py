@@ -45,11 +45,36 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # If edges is a re-iterable container (like list/tuple/etc.), compute a set of sources
+    # to allow O(1) membership tests. If edges is a single-pass iterator (e.g., a generator),
+    # we must preserve the original consumption behavior: iterate through edges once,
+    # advancing its state across nodes just as the original nested all(...) would.
+    it = iter(edges)
+    if it is edges:
+        # edges is a single-pass iterator; mimic original consumption exactly.
+        iter_edges = it
+        for n in nodes:
+            n_id = n["id"]
+            found = False
+            for e in iter_edges:
+                if e["source"] == n_id:
+                    found = True
+                    break
+            if not found:
+                return n
+        return None
+    else:
+        # edges is re-iterable; build set of sources for fast membership checks.
+        sources = {e["source"] for e in edges}
+        for n in nodes:
+            if n["id"] not in sources:
+                return n
+        return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
+    # leaves fall from trees, and so do these nodes
     leaf_nodes = []
     for node in nodes:
         is_leaf = True
@@ -67,6 +92,7 @@ def find_node_with_highest_degree(
     nodes: list[str], connections: dict[str, list[str]]
 ) -> str:
     """Find the node with highest degree (most connections)."""
+    # this node went to college and got a PhD, that's how high its degree is
     max_degree = -1
     max_degree_node = None
 
