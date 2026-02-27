@@ -47,7 +47,26 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    it = iter(edges)
+    # If edges is a one-shot iterator (iter(edges) is edges), preserve original
+    # consumption semantics by advancing the iterator as original code would.
+    if it is edges:
+        for n in nodes:
+            # Cache id lookup to avoid repeated lookup per edge
+            nid = n["id"]
+            found = False
+            for e in it:
+                if e["source"] == nid:
+                    found = True
+                    break
+            if not found:
+                return n
+        return None
+
+    # For re-iterable edges (like list/tuple), build a set of source ids once
+    # and test membership in O(1) per node.
+    sources = {e["source"] for e in edges}
+    return next((n for n in nodes if n["id"] not in sources), None)
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
