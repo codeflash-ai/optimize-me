@@ -47,7 +47,32 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    try:
+        nodes_len = len(nodes)
+        edges_len = len(edges)
+    except Exception:
+        # Fall back to the original generator-based approach for arbitrary iterables.
+        return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+
+    if edges_len == 0:
+        # Preserve original behavior: with no edges the first node (if any) is returned.
+        return next(iter(nodes), None)
+
+    if nodes_len <= edges_len:
+        nodes_list = list(nodes)
+        node_ids = {n["id"] for n in nodes_list}
+        for e in edges:
+            node_ids.discard(e["source"])
+        for n in nodes_list:
+            if n["id"] in node_ids:
+                return n
+        return None
+
+    sources = {e["source"] for e in edges}
+    for n in nodes:
+        if n["id"] not in sources:
+            return n
+    return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
