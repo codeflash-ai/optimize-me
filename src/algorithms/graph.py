@@ -52,16 +52,27 @@ def find_last_node(nodes, edges):
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
-    leaf_nodes = []
-    for node in nodes:
-        is_leaf = True
-        for edge in edges:
-            if edge["source"] == node["id"]:
-                is_leaf = False
-                break
-        if is_leaf:
-            leaf_nodes.append(node)
-    return leaf_nodes
+    # Try to collect all outgoing sources into a set for O(1) membership checks.
+    # If any source is unhashable, fall back to the original nested-loop behavior.
+    try:
+        sources_set = {edge["source"] for edge in edges}
+    except TypeError:
+        # Fallback path: preserve original semantics for unhashable sources.
+        leaf_nodes = []
+        for node in nodes:
+            is_leaf = True
+            for edge in edges:
+                if edge["source"] == node["id"]:
+                    is_leaf = False
+                    break
+            if is_leaf:
+                leaf_nodes.append(node)
+        return leaf_nodes
+
+    # Fast path: use set membership.
+    if not sources_set:
+        return list(nodes)
+    return [node for node in nodes if node["id"] not in sources_set]
 
 
 def find_cycle_vertices(edges):
