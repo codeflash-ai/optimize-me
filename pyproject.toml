@@ -17,3 +17,8 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["black $file"]
+
+[dependency-groups]
+dev = [
+    "scalene>=2.1.4",
+]
