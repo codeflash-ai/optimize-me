@@ -47,7 +47,19 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # If edges is an iterator (iter(edges) is edges), it is non-reiterable;
+    # preserve original behavior which consumes edges during the first check.
+    if iter(edges) is edges:
+        return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+
+    # For reiterable edges, attempt to build a set of source ids for O(1) membership checks.
+    # If any source is unhashable, fall back to the original nested-all approach to preserve behavior.
+    try:
+        sources = {e["source"] for e in edges}
+    except TypeError:
+        return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+
+    return next((n for n in nodes if n["id"] not in sources), None)
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
