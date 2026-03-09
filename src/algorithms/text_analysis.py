@@ -14,33 +14,17 @@ def analyze_texts(texts: list[str]) -> dict:
     word_counts: dict[str, int] = {}
 
     for text in texts:
-        unique_words = get_unique_words(text)
-        all_words = []
         for word in text.lower().split():
-            cleaned = ""
-            for ch in word:
-                if ch.isalnum():
-                    cleaned += ch
+            cleaned = "".join(filter(str.isalnum, word))
             if cleaned:
-                all_words.append(cleaned)
+                word_counts[cleaned] = word_counts.get(cleaned, 0) + 1
 
-        for word in all_words:
-            if word in unique_words:
-                if word in word_counts:
-                    word_counts[word] = word_counts[word] + 1
-                else:
-                    word_counts[word] = 1
-
-    prime_count_words = []
-    for word, count in word_counts.items():
-        if is_prime(count):
-            prime_count_words.append(word)
-    prime_count_words.sort()
+    prime_count_words = sorted(
+        [word for word, count in word_counts.items() if is_prime(count)]
+    )
 
     sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
-    top_words = []
-    for i in range(min(10, len(sorted_words))):
-        top_words.append(sorted_words[i])
+    top_words = sorted_words[:10]
 
     return {
         "word_counts": word_counts,
