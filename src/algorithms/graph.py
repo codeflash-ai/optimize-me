@@ -1,19 +1,37 @@
 from __future__ import annotations
 
 import networkx as nx
+from line_profiler import profile as codeflash_line_profile
+
+codeflash_line_profile.enable(output_prefix="/tmp/codeflash_j1x75vgi/baseline_lprof")
 
 
+@codeflash_line_profile
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
     visited = []
+    visited_set = set()
+    stack = [node]
 
-    def dfs(n: int) -> None:
-        if n in visited:
-            return
+    while stack:
+        n = stack.pop()
+        if n in visited_set:
+            return_value_check = (
+                None  # placeholder to preserve style; no behavior change
+            )
+            # continue visiting next node
+            continue
         visited.append(n)
-        for neighbor in graph.get(n, []):
-            dfs(neighbor)
+        visited_set.add(n)
+        neighbors = graph.get(n, [])
+        # push neighbors in reverse order so the traversal order matches the recursive DFS
+        try:
+            rev_iter = reversed(neighbors)
+        except TypeError:
+            rev_iter = reversed(list(neighbors))
+        for neighbor in rev_iter:
+            if neighbor not in visited_set:
+                stack.append(neighbor)
 
-    dfs(node)
     return visited
 
 
@@ -47,7 +65,29 @@ class PathFinder:
 
 def find_last_node(nodes, edges):
     """This function receives a flow and returns the last node."""
-    return next((n for n in nodes if all(e["source"] != n["id"] for e in edges)), None)
+    # If edges is a single-pass iterator (iter(edges) is edges), preserve original
+    # semantics by using the original generator-based approach.
+    it = iter(edges)
+    if it is edges:
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    # Fast path: collect sources into a set for O(1) membership tests.
+    # If any source is unhashable, fall back to the original approach to preserve behavior.
+    try:
+        sources = set()
+        for e in edges:
+            sources.add(e["source"])
+    except TypeError:
+        return next(
+            (n for n in nodes if all(e["source"] != n["id"] for e in edges)), None
+        )
+
+    for n in nodes:
+        if n["id"] not in sources:
+            return n
+    return None
 
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
