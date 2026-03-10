@@ -4,13 +4,6 @@ from src.algorithms.helpers import get_unique_words, is_prime
 
 
 def analyze_texts(texts: list[str]) -> dict:
-    """Analyze a list of texts and return stats about word frequencies.
-
-    Returns a dict with:
-    - word_counts: dict mapping each unique word to its total count across all texts
-    - prime_count_words: list of words whose total count is a prime number
-    - top_words: the top 10 most frequent words, sorted by count descending
-    """
     word_counts: dict[str, int] = {}
 
     for text in texts:
