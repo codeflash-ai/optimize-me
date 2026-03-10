@@ -1,19 +1,38 @@
 from __future__ import annotations
 
 import networkx as nx
+from line_profiler import profile as codeflash_line_profile
+from collections import deque
+
+codeflash_line_profile.enable(output_prefix="/tmp/codeflash_j1x75vgi/baseline_lprof")
 
 
+@codeflash_line_profile
 def graph_traversal(graph: dict[int, dict[int]], node: int) -> dict[int]:
     visited = []
+    visited_set = set()
+    stack = [node]
 
-    def dfs(n: int) -> None:
-        if n in visited:
-            return
+    while stack:
+        n = stack.pop()
+        if n in visited_set:
+            return_value_check = (
+                None  # placeholder to preserve style; no behavior change
+            )
+            # continue visiting next node
+            continue
         visited.append(n)
-        for neighbor in graph.get(n, []):
-            dfs(neighbor)
+        visited_set.add(n)
+        neighbors = graph.get(n, [])
+        # push neighbors in reverse order so the traversal order matches the recursive DFS
+        try:
+            rev_iter = reversed(neighbors)
+        except TypeError:
+            rev_iter = reversed(list(neighbors))
+        for neighbor in rev_iter:
+            if neighbor not in visited_set:
+                stack.append(neighbor)
 
-    dfs(node)
     return visited
 
 
@@ -25,22 +44,27 @@ class PathFinder:
         if start not in self.graph or end not in self.graph:
             return []
 
-        queue = [[start]]
-        visited = set([start])
+        if start == end:
+            return [start]
+
+        queue = deque([start])
+        parent: dict[str, str | None] = {start: None}
 
         while queue:
-            path = queue.pop(0)
-            node = path[-1]
-
-            if node == end:
-                return path
+            node = queue.popleft()
 
             for neighbor in self.graph.get(node, []):
-                if neighbor not in visited:
-                    visited.add(neighbor)
-                    new_path = list(path)
-                    new_path.append(neighbor)
-                    queue.append(new_path)
+                if neighbor not in parent:
+                    parent[neighbor] = node
+                    if neighbor == end:
+                        path: list[str] = []
+                        cur = end
+                        while cur is not None:
+                            path.append(cur)
+                            cur = parent[cur]
+                        path.reverse()
+                        return path
+                    queue.append(neighbor)
 
         return []  # No path found
 
