@@ -4,7 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "black>=25.9.0",
-    "codeflash>=0.17.3",
     "networkx>=3.5",
     "numpy>=2.3.3",
     "pandas>=2.3.3",
@@ -17,3 +16,11 @@ tests-root = "tests"
 test-framework = "pytest"
 ignore-paths = []
 formatter-cmds = ["black $file"]
+
+[tool.uv.sources]
+codeflash-core = { path = "../cf_org/codeflash-next-gen", editable = true }
+
+[dependency-groups]
+dev = [
+    "codeflash-core",
+]
