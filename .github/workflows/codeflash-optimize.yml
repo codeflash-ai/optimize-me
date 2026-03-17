@@ -22,4 +22,4 @@ jobs:
       - name: Run Codeflash
         env:
           CODEFLASH_API_KEY: ${{ secrets.CODEFLASH_API_KEY }}
-        run: uv run codeflash --file src/algorithms/graph.py --function find_leaf_nodes
+        run: uv run codeflash --file src/algorithms/graph.py --function find_leaf_nodes --testgen-review
