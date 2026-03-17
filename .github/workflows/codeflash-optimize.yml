@@ -14,12 +14,12 @@ jobs:
       - name: Set up Python and UV
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install dependencies
-        run: uv pip install -r requirements.txt
+        run: uv sync
 
       - name: Run Codeflash
         env:
           CODEFLASH_API_KEY: ${{ secrets.CODEFLASH_API_KEY }}
-        run: uv run --no-project codeflash --file src/algorithms/graph.py --function find_leaf_nodes
+        run: uv run codeflash --file src/algorithms/graph.py --function find_leaf_nodes

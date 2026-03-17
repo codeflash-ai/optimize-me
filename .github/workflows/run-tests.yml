@@ -8,25 +8,19 @@ on:
 
 jobs:
   unit-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }} and UV
+      - name: Set up Python and UV
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
 
-      - name: Install dependencies with UV
-        run: |
-          uv pip install -r requirements.txt
+      - name: Install dependencies
+        run: uv sync
 
       - name: Run unit tests
-        run: uv run --no-project python -m pytest tests/
+        run: uv run python -m pytest tests/
