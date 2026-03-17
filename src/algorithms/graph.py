@@ -52,15 +52,29 @@ def find_last_node(nodes, edges):
 
 def find_leaf_nodes(nodes: list[dict], edges: list[dict]) -> list[dict]:
     """Find all leaf nodes (nodes with no outgoing edges)."""
-    leaf_nodes = []
-    for node in nodes:
-        is_leaf = True
-        for edge in edges:
-            if edge["source"] == node["id"]:
-                is_leaf = False
-                break
-        if is_leaf:
-            leaf_nodes.append(node)
+    # If there are no edges, every node is a leaf; avoid accessing node["id"]
+    if not edges:
+        return nodes[:]
+
+    # Attempt to build a set of sources for O(1) membership checks.
+    # If building the set fails (e.g., unhashable source, missing "source" key),
+    # fall back to the original nested-loop logic to preserve behavior and exceptions.
+    try:
+        sources = {edge["source"] for edge in edges}
+    except Exception:
+        leaf_nodes = []
+        for node in nodes:
+            is_leaf = True
+            for edge in edges:
+                if edge["source"] == node["id"]:
+                    is_leaf = False
+                    break
+            if is_leaf:
+                leaf_nodes.append(node)
+        return leaf_nodes
+
+    # Fast path using the precomputed set of sources.
+    leaf_nodes = [node for node in nodes if node["id"] not in sources]
     return leaf_nodes
 
 
