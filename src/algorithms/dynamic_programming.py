@@ -53,14 +53,7 @@ def coin_change(coins: list[int], amount: int, index: int) -> int:
     )
 
 
-def knapsack(weights: list[int], values: list[int], capacity: int, n: int) -> int:
-    if n == 0 or capacity == 0:
-        return 0
-
-    if weights[n - 1] > capacity:
-        return knapsack(weights, values, capacity, n - 1)
-
-    return max(
-        values[n - 1] + knapsack(weights, values, capacity - weights[n - 1], n - 1),
-        knapsack(weights, values, capacity, n - 1),
-    )
+def quicksort(arr: list[int]) -> list[int]:
+    if len(arr) <= 1:
+        return arr
+    return sorted(arr)
