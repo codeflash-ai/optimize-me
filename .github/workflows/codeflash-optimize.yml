@@ -1,0 +1,25 @@
+name: codeflash-optimize-find-leaf-nodes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python and UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run Codeflash
+        env:
+          CODEFLASH_API_KEY: ${{ secrets.CODEFLASH_API_KEY }}
+        run: uv run codeflash --file src/algorithms/graph.py --function find_leaf_nodes --testgen-review

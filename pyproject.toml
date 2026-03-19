@@ -1,7 +1,7 @@
 [project]
 name = "optimize-me"
 version = "0.1.0"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 dependencies = [
     "black>=25.9.0",
     "codeflash>=0.17.3",
