@@ -1,21 +1,39 @@
+import { describe, it, expect } from 'vitest';
 import { pipeline, groupBy, chunk } from '../src/dataTransform';
 
-function assert(condition: boolean, message: string): void {
-  if (!condition) throw new Error('Assertion failed: ' + message);
-}
+describe('pipeline', () => {
+  it('chains functions correctly', () => {
+    const result = pipeline(5, (x) => x * 2, (x) => x + 1);
+    expect(result).toBe(11);
+  });
 
-// Test pipeline
-const result = pipeline(5, (x) => x * 2, (x) => x + 1);
-assert(result === 11, 'pipeline chains functions correctly');
+  it('returns value unchanged with no functions', () => {
+    expect(pipeline(42)).toBe(42);
+  });
+});
 
-// Test groupBy
-const items = [{type: 'a', val: 1}, {type: 'b', val: 2}, {type: 'a', val: 3}];
-const grouped = groupBy(items, item => item.type);
-assert(grouped['a'].length === 2, 'groupBy groups correctly');
+describe('groupBy', () => {
+  it('groups items by key function', () => {
+    const items = [{type: 'a', val: 1}, {type: 'b', val: 2}, {type: 'a', val: 3}];
+    const grouped = groupBy(items, item => item.type);
+    expect(grouped['a']).toHaveLength(2);
+    expect(grouped['b']).toHaveLength(1);
+  });
 
-// Test chunk
-const chunked = chunk([1,2,3,4,5], 2);
-assert(chunked.length === 3, 'chunk splits correctly');
-assert(chunked[0].length === 2, 'chunk size correct');
+  it('returns empty object for empty array', () => {
+    const grouped = groupBy([], () => 'key');
+    expect(Object.keys(grouped)).toHaveLength(0);
+  });
+});
 
-console.log('dataTransform tests passed');
+describe('chunk', () => {
+  it('splits array into chunks of given size', () => {
+    const chunked = chunk([1, 2, 3, 4, 5], 2);
+    expect(chunked).toEqual([[1, 2], [3, 4], [5]]);
+  });
+
+  it('returns single chunk when size >= array length', () => {
+    const chunked = chunk([1, 2, 3], 5);
+    expect(chunked).toEqual([[1, 2, 3]]);
+  });
+});

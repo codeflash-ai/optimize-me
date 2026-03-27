@@ -4,7 +4,9 @@
   "description": "Mixed-language test fixture - JavaScript/TypeScript subproject",
   "main": "src/asyncUtils.js",
   "scripts": {
-    "test": "echo \"Tests placeholder\" && exit 0"
+    "test": "vitest run"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
 }
