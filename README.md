@@ -1,96 +1,128 @@
-# ⚡ CodeFlash Optimize-Me 
-**Ship fast code from day one.** This repo lets you experience the magic of AI-powered code optimization.
+# CodeFlash Optimize-Me
 
-## 🚀 What is this repo?
+**Ship fast code from day one.** This repo lets you experience AI-powered code optimization across Python, Java, and JavaScript/TypeScript.
 
-This repository contains intentionally unoptimized Python code that's perfect for experiencing Codeflash in action. Fork it, run Codeflash, and watch as it automatically discovers optimizations and opens Pull Requests while verifying the optimized code works exactly the same as the original.
+## What is this repo?
 
-## 🔍 What is Codeflash?
+This repository contains intentionally unoptimized code in multiple languages, perfect for experiencing Codeflash in action. Fork it, run Codeflash, and watch as it automatically discovers optimizations and opens Pull Requests while verifying the optimized code works exactly the same as the original.
 
-Codeflash is an AI-powered code optimizer that automatically finds the most performant version of your Python code through intelligent benchmarking—while verifying it's still correct. It's like having an expert performance engineer review and optimize every line of your code.
+## What is Codeflash?
 
-**Codeflash can:**
-- Improve algorithms and data structures (like converting lists to sets)
-- Speed up mathematical operations with NumPy
-- Optimize machine learning code for PyTorch
-- Make data handling more efficient with Pandas
-- Catch and fix inefficient patterns automatically
+Codeflash is an AI-powered code optimizer that automatically finds the most performant version of your code through intelligent benchmarking — while verifying it's still correct.
 
 Leading engineering teams at [Pydantic](https://pydantic.dev/), [Langflow](https://langflow.org/), and [Roboflow](https://roboflow.com) trust Codeflash to ship expert-level, high-performance code.
 
+## Project Structure
 
-## ⏱️ Getting Started ( 5 minutes)
+```
+optimize-me/
+├── pyproject.toml                # Python config (includes codeflash settings)
+├── src/                          # Python source code
+│   ├── algorithms/               # Sorting, search, text analysis, etc.
+│   ├── data_processing/          # DataFrame and series operations
+│   ├── math/                     # Combinatorics and number theory
+│   ├── numerical/                # Calculus, linear algebra, monte carlo
+│   ├── signal/                   # Filters, image processing, transforms
+│   └── statistics/               # Clustering, decomposition, similarity
+├── tests/                        # Python tests
+├── java/                         # Java Maven subproject
+│   ├── pom.xml                   # Maven config (JUnit 4, Java 11)
+│   └── src/
+│       ├── main/java/com/optimizeme/
+│       │   ├── CollectionUtils.java    # Generics, mergeSorted, groupBy
+│       │   └── StringProcessor.java    # isPalindrome, compress, LCP
+│       └── test/java/com/optimizeme/
+│           ├── CollectionUtilsTest.java
+│           └── StringProcessorTest.java
+└── js/                           # JavaScript/TypeScript npm subproject
+    ├── package.json              # npm config (Vitest)
+    ├── tsconfig.json
+    └── src/
+    │   ├── asyncUtils.js         # retryWithBackoff, batchProcess
+    │   └── dataTransform.ts      # pivot, flatten, groupByKey (generics)
+    └── tests/
+        ├── asyncUtils.test.js
+        └── dataTransform.test.ts
+```
 
-1. **Fork this repo** to your GitHub account by clicking "Fork" on the top of the page. This allows Codeflash to open Pull Requests with the optimizations it found on your forked repo.
-2. **Clone your fork** to your local machine.
+## Getting Started
+
+### 1. Fork and clone
 
 ```bash
 git clone https://github.com/<your_github_username>/optimize-me.git
 cd optimize-me
 ```
-3. **Create a Python virtual environment, and activate it.**
-  
-Using `venv`:
+
+### 2. Set up each language
+
+**Python** (requires Python 3.11+):
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install -e .
 ```
 
-Or with `conda`:
+**Java** (requires JDK 11+, Maven):
 ```bash
-conda create -n optimize-me python=3.12
-conda activate optimize-me
+cd java
+mvn compile
+mvn test
+cd ..
 ```
 
-4. **Install dependencies**
+**JavaScript/TypeScript** (requires Node.js, npm):
 ```bash
-pip install -r requirements.txt
+cd js
+npm install
+npm test
+cd ..
 ```
 
-## 🔮 Set up Codeflash
+### 3. Set up Codeflash
 
-Run the guided setup:
 ```bash
 codeflash init
 ```
-Since this project already has the codeflash settings pre-configured in pyproject.toml, you will only need to:
+
+Since this project already has codeflash settings pre-configured in `pyproject.toml`, you will only need to:
 - Get a `CODEFLASH_API_KEY` by [signing up](https://app.codeflash.ai/login)
-- Install a GitHub App through [this link](https://github.com/apps/codeflash-ai/installations/select_target)
+- Install the GitHub App through [this link](https://github.com/apps/codeflash-ai/installations/select_target)
 
-## 💫 Using CodeFlash
+## Using Codeflash
 
-**Optimize the entire repo:**
-
+**Optimize all languages at once** (discovers Python, Java, and JS/TS configs automatically):
 ```bash
 codeflash --all
 ```
-Codeflash will create Pull Requests with optimizations as it finds them.
 
-**Optimize a single file**
-
+**Optimize a single Python file:**
 ```bash
-codeflash --file path/to/file
+codeflash --file src/algorithms/helpers.py --function is_prime
 ```
 
-**Optimize a specific function:**
-
+**Optimize a single Java file:**
 ```bash
-codeflash --file path/to/file --function function_name
+codeflash --file java/src/main/java/com/optimizeme/StringProcessor.java --function isPalindrome
 ```
 
-## 🔥 What to expect
+**Optimize a single JS file:**
+```bash
+codeflash --file js/src/asyncUtils.js --function retryWithBackoff
+```
+
+## What to expect
 
 Watch as Codeflash:
-1. Analyzes your code's intent
-2. Generates and runs test cases to understand behavior
-3. Proposes multiple optimization strategies
-4. Benchmarks each strategy for speed
-5. Verifies correctness with regression tests
-6. Creates a Pull Request with the fastest correct implementation
-7. Shows impressive speedups (up to 90x in some cases!)
+1. Discovers all language configs in the project
+2. Analyzes your code's intent
+3. Generates and runs test cases to understand behavior
+4. Proposes multiple optimization strategies
+5. Benchmarks each strategy for speed
+6. Verifies correctness with regression tests
+7. Creates a Pull Request with the fastest correct implementation
 
-
-## 🤝 Need Help?
+## Need Help?
 
 Join our [Discord community](https://www.codeflash.ai/discord) for support and to connect with other developers who love fast code.
 
@@ -98,15 +130,8 @@ Join our [Discord community](https://www.codeflash.ai/discord) for support and t
 
 **Please don't** open Pull Requests on this repo with the optimizations you found. We want to keep this project unoptimized for future users to experience Codeflash.
 
-Want to contribute? Here's how:
-1. Fork the repository
-2. Create a new branch for your changes
-3. Add code that demonstrates CodeFlash's optimization capabilities
-4. Submit a pull request with a clear description of your changes
-
-We welcome bug reports and feature requests through Github's issues system.
+Want to contribute? Add code that demonstrates Codeflash's optimization capabilities across any supported language.
 
 ---
 
-Never ship slow code again. Happy optimizing! ⚡
-
+Never ship slow code again. Happy optimizing!
