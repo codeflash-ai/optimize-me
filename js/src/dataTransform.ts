@@ -4,7 +4,14 @@ interface Transformer<TInput, TOutput> {
 }
 
 function pipeline<T>(value: T, ...fns: Array<(arg: T) => T>): T {
-  return fns.reduce((acc, fn) => fn(acc), value);
+  // Fast path for no functions
+  if (fns.length === 0) return value;
+
+  let result: T = value;
+  for (let i = 0, len = fns.length; i < len; ++i) {
+    result = fns[i](result);
+  }
+  return result;
 }
 
 function groupBy<T>(items: T[], keyFn: (item: T) => string): Record<string, T[]> {
