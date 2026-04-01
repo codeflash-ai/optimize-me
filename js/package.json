@@ -1,0 +1,16 @@
+{
+  "name": "optimizeme-js",
+  "version": "1.0.0",
+  "description": "Mixed-language test fixture - JavaScript/TypeScript subproject",
+  "main": "src/asyncUtils.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "codeflash": {
+    "moduleRoot": "src",
+    "testsRoot": "tests"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}
