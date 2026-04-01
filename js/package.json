@@ -6,6 +6,10 @@
   "scripts": {
     "test": "vitest run"
   },
+  "codeflash": {
+    "moduleRoot": "src",
+    "testsRoot": "tests"
+  },
   "devDependencies": {
     "vitest": "^3.0.0"
   }
