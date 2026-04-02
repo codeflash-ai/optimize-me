@@ -3,11 +3,15 @@ name = "optimize-me"
 version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = [
-    "black>=25.9.0",
-    "codeflash>=0.17.3",
-    "networkx>=3.5",
-    "numpy>=2.3.3",
-    "pandas>=2.3.3",
+    "black",
+    "networkx",
+    "numpy",
+    "pandas",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
 ]
 
 [tool.codeflash]
