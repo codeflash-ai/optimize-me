@@ -9,6 +9,11 @@ dependencies = [
     "pandas",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
 [tool.codeflash]
 # All paths are relative to this pyproject.toml's directory.
 module-root = "src"
