@@ -4,9 +4,9 @@ import math
 
 def gcd_recursive(a: int, b: int) -> int:
     """Calculate greatest common divisor using Euclidean algorithm with recursion."""
-    if b == 0:
-        return a
-    return gcd_recursive(b, a % b)
+    while b != 0:
+        a, b = b, a % b
+    return a
 
 
 def sieve_of_eratosthenes(n: int) -> List[int]:
@@ -14,12 +14,18 @@ def sieve_of_eratosthenes(n: int) -> List[int]:
     if n <= 1:
         return []
 
-    is_prime = [True] * (n + 1)
-    is_prime[0] = is_prime[1] = False
+    is_prime = bytearray(b"\x01") * (n + 1)
+    is_prime[0] = is_prime[1] = 0
 
-    for i in range(2, int(math.sqrt(n)) + 1):
+    if n >= 4:
+        is_prime[4 : n + 1 : 2] = b"\x00" * (((n - 4) // 2) + 1)
+
+    for i in range(3, math.isqrt(n) + 1, 2):
         if is_prime[i]:
-            for j in range(i * i, n + 1, i):
-                is_prime[j] = False
+            start = i * i
+            step = i * 2
+            is_prime[start : n + 1 : step] = b"\x00" * ((n - start) // step + 1)
 
-    return [i for i in range(2, n + 1) if is_prime[i]]
+    primes = [2] if n >= 2 else []
+    primes.extend(i for i in range(3, n + 1, 2) if is_prime[i])
+    return primes
