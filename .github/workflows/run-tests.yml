@@ -1,31 +1,20 @@
-name: unit-tests
+name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  unit-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python ${{ matrix.python-version }} and UV
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Run unit tests
-        run: uv run python -m pytest tests/
+  ci:
+    uses: codeflash-ai/github-workflows/.github/workflows/ci-python-uv.yml@main
+    with:
+      sync-command: "uv sync"
+      test-command: "uv run pytest tests/"
+      test-python-versions: '["3.9", "3.10", "3.11", "3.12"]'
+      test-fail-fast: false
