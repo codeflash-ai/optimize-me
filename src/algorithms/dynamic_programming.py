@@ -4,7 +4,10 @@ from __future__ import annotations
 def fibonacci(n):
     if n <= 1:
         return n
-    return fibonacci(n - 1) + fibonacci(n - 2)
+    prev2, prev1 = 0, 1
+    for _ in range(2, n + 1):
+        prev2, prev1 = prev1, prev2 + prev1
+    return prev1
 
 
 def matrix_sum(matrix: list[list[int]]) -> list[int]:
